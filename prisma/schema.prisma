@@ -6,9 +6,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = "postgresql://default:u4INQxebGT3O@ep-orange-wind-a4icr4tz-pooler.us-east-1.aws.neon.tech/verceldb?sslmode=require&channel_binding=require"
-  directUrl = "postgresql://default:u4INQxebGT3O@ep-orange-wind-a4icr4tz-pooler.us-east-1.aws.neon.tech/verceldb?sslmode=require&channel_binding=require"
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model Customer {

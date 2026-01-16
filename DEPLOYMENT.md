@@ -11,10 +11,13 @@
 
 ### Step 2: Configure Environment Variables
 1. In the "Configure Project" section, click **"Environment Variables"**
-2. Add your database connection:
+2. Add your database connections:
    - **Name:** `DATABASE_URL`
-   - **Value:** Your PostgreSQL connection string (from Neon, Supabase, etc.)
-3. Click **"Deploy"**
+   - **Value:** Your PostgreSQL pooling connection string (from Neon, Supabase, etc.)
+3. Optionally add `DIRECT_URL` for migrations:
+   - **Name:** `DIRECT_URL`
+   - **Value:** Your direct PostgreSQL connection string (non-pooling)
+4. Click **"Deploy"**
 
 ### Step 3: Get Your Live URL
 After deployment completes, you'll get a URL like:
