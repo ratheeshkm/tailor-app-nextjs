@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 
+// Prevent static generation for this API route
+export const dynamic = 'force-dynamic';
+
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
 };
@@ -9,21 +12,25 @@ const prisma = globalForPrisma.prisma ?? new PrismaClient();
 
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
 
-// Check if database is configured
-if (!process.env.DATABASE_URL) {
-  console.error('DATABASE_URL environment variable is not set');
-}
-
 export async function GET() {
   try {
-    await prisma.$connect();
+    if (!process.env.DATABASE_URL) {
+      return NextResponse.json(
+        { error: 'Database not configured' },
+        { status: 503 }
+      );
+    }
+
     const customers = await prisma.customer.findMany({
       orderBy: { createdAt: 'desc' },
     });
     return NextResponse.json(customers);
   } catch (error) {
     console.error('Error fetching customers:', error);
-    return NextResponse.json({ error: 'Database connection failed. Please check your database configuration.' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Failed to fetch customers' },
+      { status: 500 }
+    );
   }
 }
 
