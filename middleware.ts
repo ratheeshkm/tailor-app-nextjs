@@ -3,7 +3,7 @@ import jwt from 'jsonwebtoken';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
 
-const publicRoutes = ['/login'];
+const publicRoutes = ['/', '/login'];
 const apiPublicRoutes = ['/api/auth/login', '/api/health'];
 
 export function middleware(request: NextRequest) {

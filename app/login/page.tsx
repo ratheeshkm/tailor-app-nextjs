@@ -31,7 +31,7 @@ export default function LoginPage() {
       }
 
       // Login successful
-      router.push('/');
+      router.push('/dashboard');
     } catch (err) {
       setError('root', { message: 'An error occurred. Please try again.' });
       console.error('Login error:', err);
@@ -81,12 +81,12 @@ export default function LoginPage() {
             <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Password
             </label>
-            <div className="relative">
+            <div className="relative flex items-center">
               <input
                 type={showPassword ? 'text' : 'password'}
                 id="password"
                 disabled={isSubmitting}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white pr-10"
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
                 placeholder="Enter your password"
                 {...register('password', {
                   required: 'Password is required',
@@ -96,8 +96,9 @@ export default function LoginPage() {
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white focus:outline-none"
+                className="absolute right-3 p-1 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 focus:outline-none z-10"
                 disabled={isSubmitting}
+                tabIndex={-1}
               >
                 {showPassword ? (
                   <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
