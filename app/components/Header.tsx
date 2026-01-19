@@ -44,7 +44,7 @@ export default function Header() {
             </Link>
 
             {/* Desktop Navigation */}
-            <nav className="hidden md:flex space-x-8">
+            <nav className="hidden md:flex space-x-8 items-center">
               <div className="relative" ref={ordersMenuRef}>
                 <button
                   onClick={() => setIsOrdersOpen(!isOrdersOpen)}
@@ -93,6 +93,15 @@ export default function Header() {
                   </div>
                 )}
               </div>
+              <button
+                onClick={async () => {
+                  await fetch('/api/auth/logout', { method: 'POST' });
+                  router.push('/login');
+                }}
+                className="text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium"
+              >
+                Logout
+              </button>
             </nav>
 
             {/* Mobile menu button */}
@@ -205,6 +214,17 @@ export default function Header() {
                   </div>
                 )}
               </div>
+              <hr className="my-2 dark:border-gray-700" />
+              <button
+                onClick={async () => {
+                  await fetch('/api/auth/logout', { method: 'POST' });
+                  router.push('/login');
+                  setIsMenuOpen(false);
+                }}
+                className="text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white block w-full text-left px-3 py-2 rounded-md text-base font-medium transition-colors duration-200"
+              >
+                Logout
+              </button>
             </nav>
           </div>
         </div>
