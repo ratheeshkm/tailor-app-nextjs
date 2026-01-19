@@ -40,7 +40,7 @@ export default function Header() {
           <div className="flex justify-between items-center h-16">
             {/* Logo */}
             <Link href="/" className="flex-shrink-0 hover:opacity-80 transition-opacity">
-              <h1 className="text-xl font-bold text-black dark:text-white">Tailer App</h1>
+              <h1 className="text-xl font-bold text-black dark:text-white">Devu Tailer Shop</h1>
             </Link>
 
             {/* Desktop Navigation */}

@@ -15,13 +15,13 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Tailer App - Stitching Order Management",
+  title: "Devu Tailer Shop - Stitching Order Management",
   description: "Manage your stitching orders with ease. Track customer orders, measurements, and delivery dates.",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "Tailer App",
+    title: "Devu Tailer Shop",
   },
   formatDetection: {
     telephone: false,
