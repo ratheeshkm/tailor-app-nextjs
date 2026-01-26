@@ -2,17 +2,23 @@
 
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useNewStitching } from '../contexts/NewStitchingContext';
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isOrdersOpen, setIsOrdersOpen] = useState(false);
   const [isCustomersOpen, setIsCustomersOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const ordersMenuRef = useRef<HTMLDivElement>(null);
   const customersMenuRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
+  const pathname = usePathname();
   const { triggerReset } = useNewStitching();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -33,13 +39,18 @@ export default function Header() {
     };
   }, [isOrdersOpen, isCustomersOpen]);
 
+  // Hide menu on login page (pathname === '/')
+  if (mounted && pathname === '/') {
+    return null;
+  }
+
   return (
     <>
       <header className="bg-white shadow-md dark:bg-black">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="container mx-auto px-4">
           <div className="flex justify-between items-center h-16">
             {/* Logo */}
-            <Link href="/" className="flex-shrink-0 hover:opacity-80 transition-opacity">
+            <Link href="/dashboard" className="flex-shrink-0 hover:opacity-80 transition-opacity">
               <h1 className="text-xl font-bold text-black dark:text-white">Devu Tailer Shop</h1>
             </Link>
 

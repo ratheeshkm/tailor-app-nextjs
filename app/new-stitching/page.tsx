@@ -10,14 +10,16 @@ type Customer = {
   mobile: string;
 };
 
-type ClothType = 'Pants' | 'Shirts' | 'Dresses' | 'Jackets';
+type ClothType = {
+  id: number;
+  name: string;
+};
 
 type Measurement = {
   name: string;
   value: string;
 };
 
-const clothTypes: ClothType[] = ['Pants', 'Shirts', 'Dresses', 'Jackets'];
 
 type MeasurementFormData = {
   waist: string;
@@ -64,7 +66,7 @@ function MeasurementModal({ clothType, onClose, onSubmit }: MeasurementModalProp
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white dark:bg-gray-800 p-6 rounded-lg max-w-md w-full mx-4">
         <h3 className="text-lg font-semibold mb-4 text-black dark:text-white">
-          Enter Measurements for {clothType}
+          Enter Measurements for {clothType.name}
         </h3>
         <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-4">
           <div>
@@ -94,37 +96,6 @@ function MeasurementModal({ clothType, onClose, onSubmit }: MeasurementModalProp
             {errors.waist && (
               <p className="mt-1 text-sm text-red-600 dark:text-red-400">
                 {errors.waist.message}
-              </p>
-            )}
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-black dark:text-white mb-1">
-              Length *
-            </label>
-            <input
-              type="text"
-              {...register('length', {
-                required: 'Length measurement is required',
-                pattern: {
-                  value: /^\d+(\.\d+)?$/,
-                  message: 'Please enter a valid number',
-                },
-                min: {
-                  value: 10,
-                  message: 'Length must be at least 10 inches',
-                },
-                max: {
-                  value: 80,
-                  message: 'Length must be less than 80 inches',
-                },
-              })}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-black dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Enter length measurement (inches)"
-            />
-            {errors.length && (
-              <p className="mt-1 text-sm text-red-600 dark:text-red-400">
-                {errors.length.message}
               </p>
             )}
           </div>
@@ -251,7 +222,7 @@ function Step3Form({
   return (
     <div>
       <h2 className="text-2xl font-semibold mb-4 text-black dark:text-white">
-        Order Details for {selectedCustomer?.name} - {selectedClothType}
+        Order Details for {selectedCustomer?.name} - {selectedClothType?.name}
       </h2>
       <form onSubmit={handleFormSubmit(onFormSubmit)} className="space-y-6">
         <div>
@@ -482,6 +453,8 @@ export default function NewStitchingPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const customersPerPage = 12;
+  const [clothTypes, setClothTypes] = useState<ClothType[]>([]);
+  const [clothTypesLoading, setClothTypesLoading] = useState(true);
   const [clothTypeSearchTerm, setClothTypeSearchTerm] = useState('');
   const [clothTypeCurrentPage, setClothTypeCurrentPage] = useState(1);
   const clothTypesPerPage = 12;
@@ -518,6 +491,26 @@ export default function NewStitchingPage() {
       }
     }
     fetchCustomers();
+  }, []);
+
+  useEffect(() => {
+    async function fetchClothTypes() {
+      try {
+        setClothTypesLoading(true);
+        const response = await fetch('/api/cloth-types');
+        if (response.ok) {
+          const data = await response.json();
+          setClothTypes(data);
+        } else {
+          console.error('Failed to fetch cloth types:', response.statusText);
+        }
+      } catch (error) {
+        console.error('Error fetching cloth types:', error);
+      } finally {
+        setClothTypesLoading(false);
+      }
+    }
+    fetchClothTypes();
   }, []);
 
   const handleCustomerSelect = (customer: Customer) => {
@@ -562,8 +555,8 @@ export default function NewStitchingPage() {
   const paginatedCustomers = filteredCustomers.slice(startIndex, endIndex);
 
   // Cloth type filtering and pagination
-  const filteredClothTypes = clothTypes.filter(type =>
-    type.toLowerCase().includes(clothTypeSearchTerm.toLowerCase())
+  const filteredClothTypes = clothTypes.filter((type: ClothType) =>
+    type.name.toLowerCase().includes(clothTypeSearchTerm.toLowerCase())
   );
 
   const clothTypeTotalPages = Math.ceil(filteredClothTypes.length / clothTypesPerPage);
@@ -789,18 +782,18 @@ export default function NewStitchingPage() {
             ) : (
               <>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {paginatedClothTypes.map(type => (
+                  {paginatedClothTypes.map((type: ClothType) => (
                     <button
-                      key={type}
+                      key={type.id}
                       onClick={() => handleClothTypeSelect(type)}
                       className={`p-4 rounded-lg shadow transition-all text-left ${
-                        selectedClothType === type
+                        selectedClothType?.id === type.id
                           ? 'bg-blue-500 text-white shadow-lg ring-2 ring-blue-300'
                           : 'bg-white dark:bg-gray-800 hover:shadow-md text-black dark:text-white'
                       }`}
                     >
-                      <h3 className="font-medium">{type}</h3>
-                      {selectedClothType === type && (
+                      <h3 className="font-medium">{type.name}</h3>
+                      {selectedClothType?.id === type.id && (
                         <div className="mt-2 flex items-center text-xs font-medium">
                           <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
                             <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />

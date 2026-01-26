@@ -180,13 +180,21 @@ export default function Dashboard() {
               type="date"
               value={searchDeliveryDate}
               onChange={(e) => setSearchDeliveryDate(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-background"
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-background text-gray-700 dark:text-gray-300"
             />
           </div>
 
-          {/* Result Count */}
-          <div className="text-sm text-gray-600 mb-4">
-            Showing {paginatedOrders.length} of {filteredOrders.length} orders
+          {/* Result Count and Add Button */}
+          <div className="flex justify-between items-center mb-4">
+            <div className="text-sm text-gray-600">
+              Showing {paginatedOrders.length} of {filteredOrders.length} orders
+            </div>
+            <Link
+              href="/new-stitching"
+              className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg shadow-lg transition-colors text-sm"
+            >
+              Add New Order
+            </Link>
           </div>
         </div>
 
@@ -290,15 +298,6 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* Add New Order Button */}
-        <div className="fixed bottom-8 right-8">
-          <Link
-            href="/new-stitching"
-            className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-lg shadow-lg transition-colors"
-          >
-            Add New Order
-          </Link>
-        </div>
       </div>
     </main>
   );
