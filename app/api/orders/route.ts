@@ -1,16 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/app/lib/prisma';
+import jwt from 'jsonwebtoken';
 
 // Prevent static generation for this API route
 export const dynamic = 'force-dynamic';
-
-const globalForPrisma = globalThis as unknown as {
-  prisma: PrismaClient | undefined;
-};
-
-const prisma = globalForPrisma.prisma ?? new PrismaClient();
-
-if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
 
 export async function POST(request: NextRequest) {
   try {
@@ -75,6 +68,18 @@ export async function POST(request: NextRequest) {
     // Optional fields
     const waist = data.waist?.toString().trim() || null;
     const length = data.length?.toString().trim() || null;
+    const shoulderWidth = data.shoulderWidth?.toString().trim() || null;
+    const chest = data.chest?.toString().trim() || null;
+    const hip = data.hip?.toString().trim() || null;
+    const bicep = data.bicep?.toString().trim() || null;
+    const neck = data.neck?.toString().trim() || null;
+    const collar = data.collar?.toString().trim() || null;
+    const sleeve = data.sleeve?.toString().trim() || null;
+    const notes = data.notes?.toString().trim() || null;
+
+    // Image fields (placeholder - in production, upload to storage service like S3)
+    const measurementImages = data.measurementImages || null;
+    const clothImages = data.clothImages || null;
 
     if (!customerId || !clothType || !stitchingType || !measurementsGiven || !numberOfItems || charge === null || !deliveryDate) {
       console.error('Validation failed:', {
@@ -94,9 +99,22 @@ export async function POST(request: NextRequest) {
     }
 
     try {
+      // Get user ID from JWT token
+      const token = request.cookies.get('authToken')?.value;
+      if (!token) {
+        return NextResponse.json(
+          { error: 'Unauthorized' },
+          { status: 401 }
+        );
+      }
+
+      const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+      const decoded = jwt.verify(token, JWT_SECRET) as { id: number };
+
       // Create order
       const order = await prisma.order.create({
         data: {
+          userId: decoded.id,
           customerId,
           clothType,
           stitchingType,
@@ -106,6 +124,16 @@ export async function POST(request: NextRequest) {
           deliveryDate,
           waist,
           length,
+          shoulderWidth,
+          chest,
+          hip,
+          bicep,
+          neck,
+          collar,
+          sleeve,
+          notes,
+          measurementImages,
+          clothImages,
         },
         include: {
           customer: true,
@@ -129,7 +157,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     if (!process.env.DATABASE_URL) {
       return NextResponse.json(
@@ -138,7 +166,23 @@ export async function GET() {
       );
     }
 
+    // Get user ID from JWT token
+    const token = request.cookies.get('authToken')?.value;
+    if (!token) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
+    const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+    const decoded = jwt.verify(token, JWT_SECRET) as { id: number };
+
+    // Fetch orders only for the logged-in user
     const orders = await prisma.order.findMany({
+      where: {
+        userId: decoded.id,
+      },
       include: {
         customer: true,
       },

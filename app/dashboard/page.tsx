@@ -27,9 +27,7 @@ interface Order {
 export default function Dashboard() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [filteredOrders, setFilteredOrders] = useState<Order[]>([]);
-  const [searchName, setSearchName] = useState('');
-  const [searchMobile, setSearchMobile] = useState('');
-  const [searchDeliveryDate, setSearchDeliveryDate] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [customerFilter, setCustomerFilter] = useState<number | null>(null);
@@ -53,7 +51,9 @@ export default function Dashboard() {
   const fetchOrders = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/orders');
+      const response = await fetch('/api/orders', {
+        credentials: 'include',
+      });
       if (response.ok) {
         const data = await response.json();
         setOrders(data);
@@ -78,27 +78,22 @@ export default function Dashboard() {
       }
     }
 
-    if (searchName) {
-      filtered = filtered.filter((order) =>
-        order.customer.name.toLowerCase().includes(searchName.toLowerCase())
-      );
-    }
-
-    if (searchMobile) {
-      filtered = filtered.filter((order) =>
-        order.customer.mobile.includes(searchMobile)
-      );
-    }
-
-    if (searchDeliveryDate) {
-      filtered = filtered.filter((order) =>
-        order.deliveryDate.includes(searchDeliveryDate)
-      );
+    // Single search query that searches across name, mobile, and delivery date
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter((order) => {
+        const nameMatch = order.customer.name.toLowerCase().includes(query);
+        const mobileMatch = order.customer.mobile.includes(searchQuery);
+        const dateMatch = order.deliveryDate.includes(searchQuery);
+        const createdDateMatch = order.createdAt.includes(searchQuery);
+        
+        return nameMatch || mobileMatch || dateMatch || createdDateMatch;
+      });
     }
 
     setFilteredOrders(filtered);
     setCurrentPage(1);
-  }, [searchName, searchMobile, searchDeliveryDate, orders, customerFilter]);
+  }, [searchQuery, orders, customerFilter]);
 
   const getDeliveryStatus = (deliveryDate: string) => {
     const today = new Date();
@@ -140,61 +135,65 @@ export default function Dashboard() {
     <main className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
-          <div className="flex items-center gap-4 mb-6">
-            <h1 className="text-3xl font-bold">
-              {customerFilter ? `Orders - ${filterCustomerName}` : 'Orders'}
-            </h1>
-            {customerFilter && (
-              <button
-                onClick={() => {
-                  setCustomerFilter(null);
-                  setFilterCustomerName('');
-                  setSearchName('');
-                  setSearchMobile('');
-                  setSearchDeliveryDate('');
-                }}
-                className="px-3 py-1 bg-gray-300 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-400 dark:hover:bg-gray-600 text-sm"
-              >
-                ✕ Clear Filter
-              </button>
-            )}
-          </div>
-
-          {/* Search Section */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-            <input
-              type="text"
-              placeholder="Search by customer name..."
-              value={searchName}
-              onChange={(e) => setSearchName(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-background"
-            />
-            <input
-              type="text"
-              placeholder="Search by mobile number..."
-              value={searchMobile}
-              onChange={(e) => setSearchMobile(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-background"
-            />
-            <input
-              type="date"
-              value={searchDeliveryDate}
-              onChange={(e) => setSearchDeliveryDate(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-background text-gray-700 dark:text-gray-300"
-            />
-          </div>
-
-          {/* Result Count and Add Button */}
-          <div className="flex justify-between items-center mb-4">
-            <div className="text-sm text-gray-600">
-              Showing {paginatedOrders.length} of {filteredOrders.length} orders
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-4">
+              <h1 className="text-3xl font-bold">
+                {customerFilter ? `Orders - ${filterCustomerName}` : 'Orders'}
+              </h1>
+              {customerFilter && (
+                <button
+                  onClick={() => {
+                    setCustomerFilter(null);
+                    setFilterCustomerName('');
+                    setSearchQuery('');
+                  }}
+                  className="px-3 py-1 bg-gray-300 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-400 dark:hover:bg-gray-600 text-sm"
+                >
+                  ✕ Clear Filter
+                </button>
+              )}
             </div>
             <Link
               href="/new-stitching"
-              className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg shadow-lg transition-colors text-sm"
+              className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg shadow-lg transition-colors"
             >
-              Add New Order
+              + Add New Order
             </Link>
+          </div>
+
+          {/* Search Section */}
+          <div className="mb-6">
+            <div className="relative max-w-md">
+              <input
+                type="text"
+                placeholder="Search by customer name, mobile number, or date..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full px-4 py-3 pl-10 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-black dark:text-white"
+              />
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                >
+                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Result Count */}
+          <div className="mb-4">
+            <div className="text-sm text-gray-600 dark:text-gray-400">
+              Showing {paginatedOrders.length} of {filteredOrders.length} orders
+            </div>
           </div>
         </div>
 
@@ -214,13 +213,13 @@ export default function Dashboard() {
               return (
                 <div
                   key={order.id}
-                  className="border border-gray-300 rounded-lg p-6 hover:shadow-lg transition-shadow bg-background"
+                  className="border border-gray-300 dark:border-gray-700 rounded-lg p-6 hover:shadow-lg transition-shadow bg-white dark:bg-gray-800"
                 >
                   {/* Header with Status */}
                   <div className="flex justify-between items-start mb-4">
                     <div>
-                      <h3 className="text-lg font-semibold">{order.customer.name}</h3>
-                      <p className="text-sm text-gray-600">{order.customer.mobile}</p>
+                      <h3 className="text-lg font-semibold text-black dark:text-white">{order.customer.name}</h3>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">{order.customer.mobile}</p>
                     </div>
                     <span className={`px-3 py-1 rounded-full text-xs font-semibold ${deliveryStatus.color}`}>
                       {deliveryStatus.label}
@@ -230,41 +229,33 @@ export default function Dashboard() {
                   {/* Order Details */}
                   <div className="space-y-2 mb-4">
                     <div className="flex justify-between">
-                      <span className="text-sm text-gray-600">Cloth Type:</span>
-                      <span className="text-sm font-medium">{order.clothType}</span>
+                      <span className="text-sm text-gray-600 dark:text-gray-400">Cloth Type:</span>
+                      <span className="text-sm font-medium text-black dark:text-white">
+                        {typeof order.clothType === 'string' && order.clothType !== '[object Object]' 
+                          ? order.clothType 
+                          : 'N/A'}
+                      </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-sm text-gray-600">Stitching Type:</span>
-                      <span className="text-sm font-medium">{order.stitchingType}</span>
+                      <span className="text-sm text-gray-600 dark:text-gray-400">Stitching Type:</span>
+                      <span className="text-sm font-medium text-black dark:text-white">{order.stitchingType}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-sm text-gray-600">Items:</span>
-                      <span className="text-sm font-medium">{order.numberOfItems}</span>
+                      <span className="text-sm text-gray-600 dark:text-gray-400">Items:</span>
+                      <span className="text-sm font-medium text-black dark:text-white">{order.numberOfItems}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-sm text-gray-600">Charge:</span>
-                      <span className="text-sm font-medium">₹{order.charge}</span>
+                      <span className="text-sm text-gray-600 dark:text-gray-400">Charge:</span>
+                      <span className="text-sm font-medium text-black dark:text-white">₹{order.charge}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-sm text-gray-600">Delivery Date:</span>
-                      <span className="text-sm font-medium">{new Date(order.deliveryDate).toLocaleDateString()}</span>
+                      <span className="text-sm text-gray-600 dark:text-gray-400">Delivery Date:</span>
+                      <span className="text-sm font-medium text-black dark:text-white">{new Date(order.deliveryDate).toLocaleDateString()}</span>
                     </div>
-                    {order.waist && (
-                      <div className="flex justify-between">
-                        <span className="text-sm text-gray-600">Waist:</span>
-                        <span className="text-sm font-medium">{order.waist}</span>
-                      </div>
-                    )}
-                    {order.length && (
-                      <div className="flex justify-between">
-                        <span className="text-sm text-gray-600">Length:</span>
-                        <span className="text-sm font-medium">{order.length}</span>
-                      </div>
-                    )}
                   </div>
 
                   {/* Order ID */}
-                  <div className="text-xs text-gray-500 mt-4 pt-4 border-t border-gray-200 flex justify-between items-center">
+                  <div className="text-xs text-gray-500 dark:text-gray-400 mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 flex justify-between items-center">
                     <span>Order ID: #{order.id}</span>
                     <Link
                       href={`/edit-stitching/${order.id}`}

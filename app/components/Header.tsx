@@ -7,10 +7,9 @@ import { useNewStitching } from '../contexts/NewStitchingContext';
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isOrdersOpen, setIsOrdersOpen] = useState(false);
   const [isCustomersOpen, setIsCustomersOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
-  const ordersMenuRef = useRef<HTMLDivElement>(null);
+  const [shopName, setShopName] = useState('Stitching Order Management');
   const customersMenuRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const pathname = usePathname();
@@ -18,26 +17,40 @@ export default function Header() {
 
   useEffect(() => {
     setMounted(true);
+    
+    // Fetch shop name
+    const fetchShopName = async () => {
+      try {
+        const response = await fetch('/api/shop');
+        if (response.ok) {
+          const data = await response.json();
+          if (data.shop?.shopName) {
+            setShopName(data.shop.shopName);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to fetch shop name:', error);
+      }
+    };
+    
+    fetchShopName();
   }, []);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (ordersMenuRef.current && !ordersMenuRef.current.contains(event.target as Node)) {
-        setIsOrdersOpen(false);
-      }
       if (customersMenuRef.current && !customersMenuRef.current.contains(event.target as Node)) {
         setIsCustomersOpen(false);
       }
     }
 
-    if (isOrdersOpen || isCustomersOpen) {
+    if (isCustomersOpen) {
       document.addEventListener('mousedown', handleClickOutside);
     }
 
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [isOrdersOpen, isCustomersOpen]);
+  }, [isCustomersOpen]);
 
   // Hide menu on login page (pathname === '/')
   if (mounted && pathname === '/') {
@@ -51,33 +64,23 @@ export default function Header() {
           <div className="flex justify-between items-center h-16">
             {/* Logo */}
             <Link href="/dashboard" className="flex-shrink-0 hover:opacity-80 transition-opacity">
-              <h1 className="text-xl font-bold text-black dark:text-white">Devu Tailer Shop</h1>
+              <h1 className="text-xl font-bold text-black dark:text-white">{shopName}</h1>
             </Link>
 
             {/* Desktop Navigation */}
             <nav className="hidden md:flex space-x-8 items-center">
-              <div className="relative" ref={ordersMenuRef}>
-                <button
-                  onClick={() => setIsOrdersOpen(!isOrdersOpen)}
-                  className="text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium"
-                >
-                  Orders
-                </button>
-                {isOrdersOpen && (
-                  <div className="absolute z-10 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg">
-                    <button
-                      onClick={() => {
-                        triggerReset();
-                        router.push('/new-stitching');
-                        setIsOrdersOpen(false);
-                      }}
-                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-                    >
-                      New Stitching
-                    </button>
-                  </div>
-                )}
-              </div>
+              <button
+                onClick={() => {
+                  if (pathname === '/dashboard') {
+                    window.location.href = '/dashboard';
+                  } else {
+                    router.push('/dashboard');
+                  }
+                }}
+                className="text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium cursor-pointer"
+              >
+                Orders
+              </button>
               <div className="relative" ref={customersMenuRef}>
                 <button
                   onClick={() => setIsCustomersOpen(!isCustomersOpen)}
@@ -106,10 +109,32 @@ export default function Header() {
               </div>
               <button
                 onClick={async () => {
-                  await fetch('/api/auth/logout', { method: 'POST' });
-                  router.push('/login');
+                  try {
+                    // Clear cookie on client side first
+                    document.cookie = 'authToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+                    
+                    // Call logout API
+                    await fetch('/api/auth/logout', { 
+                      method: 'POST',
+                      credentials: 'include'
+                    });
+                    
+                    // Clear any cached data
+                    if ('caches' in window) {
+                      caches.keys().then(names => {
+                        names.forEach(name => caches.delete(name));
+                      });
+                    }
+                    
+                    // Force a full page reload with a logout flag and cache buster
+                    window.location.href = `/?logout=true&t=${Date.now()}`;
+                  } catch (error) {
+                    console.error('Logout failed:', error);
+                    document.cookie = 'authToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+                    window.location.href = `/?logout=true&t=${Date.now()}`;
+                  }
                 }}
-                className="text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium"
+                className="text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium cursor-pointer"
               >
                 Logout
               </button>
@@ -164,32 +189,19 @@ export default function Header() {
 
             {/* Navigation Items */}
             <nav className="space-y-2">
-              <div>
-                <button
-                  onClick={() => setIsOrdersOpen(!isOrdersOpen)}
-                  className="text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white block w-full text-left px-3 py-2 rounded-md text-base font-medium transition-colors duration-200"
-                >
-                  Orders
-                  <svg className={`ml-2 h-5 w-5 inline transition-transform duration-200 ${isOrdersOpen ? 'rotate-180' : ''}`} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                  </svg>
-                </button>
-                {isOrdersOpen && (
-                  <div className="mt-2 ml-4 space-y-1 opacity-100 transition-opacity duration-200">
-                    <button
-                      onClick={() => {
-                        triggerReset();
-                        router.push('/new-stitching');
-                        setIsMenuOpen(false);
-                        setIsOrdersOpen(false);
-                      }}
-                      className="block w-full text-left px-3 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md transition-colors duration-200"
-                    >
-                      New Stitching
-                    </button>
-                  </div>
-                )}
-              </div>
+              <button
+                onClick={() => {
+                  setIsMenuOpen(false);
+                  if (pathname === '/dashboard') {
+                    window.location.href = '/dashboard';
+                  } else {
+                    router.push('/dashboard');
+                  }
+                }}
+                className="text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white block w-full text-left px-3 py-2 rounded-md text-base font-medium transition-colors duration-200 cursor-pointer"
+              >
+                Orders
+              </button>
               <div>
                 <button
                   onClick={() => setIsCustomersOpen(!isCustomersOpen)}
@@ -228,11 +240,32 @@ export default function Header() {
               <hr className="my-2 dark:border-gray-700" />
               <button
                 onClick={async () => {
-                  await fetch('/api/auth/logout', { method: 'POST' });
-                  router.push('/login');
-                  setIsMenuOpen(false);
+                  try {
+                    // Clear cookie on client side first
+                    document.cookie = 'authToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+                    
+                    // Call logout API
+                    await fetch('/api/auth/logout', { 
+                      method: 'POST',
+                      credentials: 'include'
+                    });
+                    
+                    // Clear any cached data
+                    if ('caches' in window) {
+                      caches.keys().then(names => {
+                        names.forEach(name => caches.delete(name));
+                      });
+                    }
+                    
+                    // Force a full page reload with a logout flag and cache buster
+                    window.location.href = `/?logout=true&t=${Date.now()}`;
+                  } catch (error) {
+                    console.error('Logout failed:', error);
+                    document.cookie = 'authToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+                    window.location.href = `/?logout=true&t=${Date.now()}`;
+                  }
                 }}
-                className="text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white block w-full text-left px-3 py-2 rounded-md text-base font-medium transition-colors duration-200"
+                className="text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white block w-full text-left px-3 py-2 rounded-md text-base font-medium transition-colors duration-200 cursor-pointer"
               >
                 Logout
               </button>

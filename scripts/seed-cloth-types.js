@@ -7,12 +7,13 @@ async function main() {
     console.log('🌱 Seeding cloth types...');
 
     const clothTypes = [
-      { name: 'Pants' },
-      { name: 'Shirts' },
-      { name: 'Dresses' },
-      { name: 'Jackets' },
-      { name: 'Skirts' },
-      { name: 'Blazers' },
+      { name: 'Shirt' },
+      { name: 'Pant' },
+      { name: 'Coat' },
+      { name: 'Dhoti' },
+      { name: 'Goun' },
+      { name: 'Skirt & Top' },
+      { name: 'Bottom' },
     ];
 
     for (const clothType of clothTypes) {

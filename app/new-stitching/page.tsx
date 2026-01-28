@@ -3,6 +3,9 @@
 import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNewStitching } from '../contexts/NewStitchingContext';
+import { useRouter } from 'next/navigation';
+import { uploadImages } from '../lib/cloudinary';
+import ImageViewer from '../components/ImageViewer';
 
 type Customer = {
   id: number;
@@ -23,7 +26,15 @@ type Measurement = {
 
 type MeasurementFormData = {
   waist: string;
-  length: string;
+  length?: string;
+  shoulderWidth?: string;
+  chest?: string;
+  hip?: string;
+  bicep?: string;
+  neck?: string;
+  collar?: string;
+  sleeve?: 'full' | 'half';
+  notes?: string;
   images: File[];
 };
 
@@ -50,6 +61,15 @@ function MeasurementModal({ clothType, onClose, onSubmit }: MeasurementModalProp
   } = useForm<MeasurementFormData>();
 
   const [measurementImages, setMeasurementImages] = useState<File[]>([]);
+  const [viewingImage, setViewingImage] = useState<string | null>(null);
+
+  // Prevent background scroll when modal is open
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, []);
 
   const onFormSubmit = (data: MeasurementFormData) => {
     const formData = {
@@ -63,31 +83,24 @@ function MeasurementModal({ clothType, onClose, onSubmit }: MeasurementModalProp
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white dark:bg-gray-800 p-6 rounded-lg max-w-md w-full mx-4">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white dark:bg-gray-800 p-6 rounded-lg max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
         <h3 className="text-lg font-semibold mb-4 text-black dark:text-white">
           Enter Measurements for {clothType.name}
         </h3>
         <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-4">
+          {/* Two Column Grid for Measurement Fields */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-black dark:text-white mb-1">
-              Waist *
+              Waist
             </label>
             <input
               type="text"
               {...register('waist', {
-                required: 'Waist measurement is required',
                 pattern: {
                   value: /^\d+(\.\d+)?$/,
                   message: 'Please enter a valid number',
-                },
-                min: {
-                  value: 20,
-                  message: 'Waist must be at least 20 inches',
-                },
-                max: {
-                  value: 60,
-                  message: 'Waist must be less than 60 inches',
                 },
               })}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-black dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -101,6 +114,201 @@ function MeasurementModal({ clothType, onClose, onSubmit }: MeasurementModalProp
           </div>
 
           <div>
+            <label className="block text-sm font-medium text-black dark:text-white mb-1">
+              Length
+            </label>
+            <input
+              type="text"
+              {...register('length', {
+                pattern: {
+                  value: /^\d+(\.\d+)?$/,
+                  message: 'Please enter a valid number',
+                },
+              })}
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-black dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Enter length (inches)"
+            />
+            {errors.length && (
+              <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                {errors.length.message}
+              </p>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-black dark:text-white mb-1">
+              Shoulder Width
+            </label>
+            <input
+              type="text"
+              {...register('shoulderWidth', {
+                pattern: {
+                  value: /^\d+(\.\d+)?$/,
+                  message: 'Please enter a valid number',
+                },
+              })}
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-black dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Enter shoulder width (inches)"
+            />
+            {errors.shoulderWidth && (
+              <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                {errors.shoulderWidth.message}
+              </p>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-black dark:text-white mb-1">
+              Chest
+            </label>
+            <input
+              type="text"
+              {...register('chest', {
+                pattern: {
+                  value: /^\d+(\.\d+)?$/,
+                  message: 'Please enter a valid number',
+                },
+              })}
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-black dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Enter chest measurement (inches)"
+            />
+            {errors.chest && (
+              <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                {errors.chest.message}
+              </p>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-black dark:text-white mb-1">
+              Hip
+            </label>
+            <input
+              type="text"
+              {...register('hip', {
+                pattern: {
+                  value: /^\d+(\.\d+)?$/,
+                  message: 'Please enter a valid number',
+                },
+              })}
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-black dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Enter hip measurement (inches)"
+            />
+            {errors.hip && (
+              <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                {errors.hip.message}
+              </p>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-black dark:text-white mb-1">
+              Bicep
+            </label>
+            <input
+              type="text"
+              {...register('bicep', {
+                pattern: {
+                  value: /^\d+(\.\d+)?$/,
+                  message: 'Please enter a valid number',
+                },
+              })}
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-black dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Enter bicep measurement (inches)"
+            />
+            {errors.bicep && (
+              <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                {errors.bicep.message}
+              </p>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-black dark:text-white mb-1">
+              Neck
+            </label>
+            <input
+              type="text"
+              {...register('neck', {
+                pattern: {
+                  value: /^\d+(\.\d+)?$/,
+                  message: 'Please enter a valid number',
+                },
+              })}
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-black dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Enter neck measurement (inches)"
+            />
+            {errors.neck && (
+              <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                {errors.neck.message}
+              </p>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-black dark:text-white mb-1">
+              Collar
+            </label>
+            <input
+              type="text"
+              {...register('collar', {
+                pattern: {
+                  value: /^\d+(\.\d+)?$/,
+                  message: 'Please enter a valid number',
+                },
+              })}
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-black dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Enter collar measurement (inches)"
+            />
+            {errors.collar && (
+              <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                {errors.collar.message}
+              </p>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-black dark:text-white mb-2">
+              Sleeve
+            </label>
+            <div className="flex gap-4">
+              <label className="flex items-center">
+                <input
+                  type="radio"
+                  value="full"
+                  {...register('sleeve')}
+                  className="mr-2"
+                />
+                <span className="text-black dark:text-white">Full</span>
+              </label>
+              <label className="flex items-center">
+                <input
+                  type="radio"
+                  value="half"
+                  {...register('sleeve')}
+                  className="mr-2"
+                />
+                <span className="text-black dark:text-white">Half</span>
+              </label>
+            </div>
+          </div>
+          </div>
+          {/* End of Two Column Grid */}
+
+          {/* Full Width Fields */}
+          <div>
+            <label className="block text-sm font-medium text-black dark:text-white mb-1">
+              Measurement Notes
+            </label>
+            <textarea
+              {...register('notes')}
+              rows={3}
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-black dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+              placeholder="Add any additional notes about measurements (optional)"
+            />
+          </div>
+
+          <div>
             <label className="block text-sm font-medium text-black dark:text-white mb-2">
               Measurement Images
             </label>
@@ -111,25 +319,37 @@ function MeasurementModal({ clothType, onClose, onSubmit }: MeasurementModalProp
               onChange={(e) => {
                 const files = Array.from(e.target.files || []);
                 setMeasurementImages(prev => [...prev, ...files]);
+                e.target.value = '';
               }}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-black dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
             />
             {measurementImages.length > 0 && (
               <div className="mt-2">
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  {measurementImages.length} image(s) selected
-                </p>
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    {measurementImages.length} image(s) selected
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setMeasurementImages([])}
+                    className="text-xs text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
+                  >
+                    Clear All
+                  </button>
+                </div>
                 <div className="flex flex-wrap gap-2 mt-2">
                   {measurementImages.map((file, index) => (
                     <div key={index} className="relative">
                       <img
                         src={URL.createObjectURL(file)}
                         alt={`Measurement ${index + 1}`}
-                        className="w-16 h-16 object-cover rounded border"
+                        className="w-16 h-16 object-cover rounded border cursor-pointer hover:opacity-80 transition-opacity"
+                        onClick={() => setViewingImage(URL.createObjectURL(file))}
                       />
                       <button
                         type="button"
-                        onClick={() => {
+                        onClick={(e) => {
+                          e.stopPropagation();
                           setMeasurementImages(prev => prev.filter((_, i) => i !== index));
                         }}
                         className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600"
@@ -142,6 +362,13 @@ function MeasurementModal({ clothType, onClose, onSubmit }: MeasurementModalProp
               </div>
             )}
           </div>
+
+          {viewingImage && (
+            <ImageViewer
+              imageUrl={viewingImage}
+              onClose={() => setViewingImage(null)}
+            />
+          )}
 
           <div className="flex space-x-4 mt-6">
             <button
@@ -189,6 +416,9 @@ function Step3Form({
   handleAddMeasurement,
   selectedCustomer,
 }: Step3FormProps) {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [viewingImage, setViewingImage] = useState<string | null>(null);
+  
   const {
     register,
     handleSubmit: handleFormSubmit,
@@ -200,23 +430,27 @@ function Step3Form({
       stitchingType: 'Stitching',
       measurementsGiven: 'No',
       numberOfItems: 1,
-      charge: 500,
+      charge: undefined,
       deliveryDate: '',
     },
   });
 
   const stitchingType = watch('stitchingType');
 
+  // Auto-set measurements radio based on whether measurements exist
   useEffect(() => {
-    if (stitchingType === 'Stitching') {
-      setValue('charge', 500);
-    } else {
-      setValue('charge', 200);
+    if (measurements.length > 0) {
+      setValue('measurementsGiven', 'Yes');
     }
-  }, [stitchingType, setValue]);
+  }, [measurements, setValue]);
 
   const onFormSubmit = async (data: Step3FormData) => {
-    await onSubmit(data);
+    setIsSubmitting(true);
+    try {
+      await onSubmit(data);
+    } catch (error) {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -263,7 +497,7 @@ function Step3Form({
 
         <div>
           <label className="block text-sm font-medium text-black dark:text-white mb-2">
-            Measurements *
+            Measurements * {measurements.length > 0 && <span className="text-green-600 dark:text-green-400 text-sm">({measurements.length} measurement set added)</span>}
           </label>
           <div className="flex space-x-4">
             <label className="flex items-center">
@@ -398,11 +632,13 @@ function Step3Form({
                     <img
                       src={URL.createObjectURL(file)}
                       alt={`Cloth ${index + 1}`}
-                      className="w-full h-20 object-cover rounded border border-gray-300 dark:border-gray-600"
+                      className="w-full h-20 object-cover rounded border border-gray-300 dark:border-gray-600 cursor-pointer hover:opacity-80 transition-opacity"
+                      onClick={() => setViewingImage(URL.createObjectURL(file))}
                     />
                     <button
                       type="button"
-                      onClick={() => {
+                      onClick={(e) => {
+                        e.stopPropagation();
                         setClothImages(clothImages.filter((_, i) => i !== index));
                       }}
                       className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm hover:bg-red-600 opacity-0 group-hover:opacity-100 transition-opacity"
@@ -419,6 +655,13 @@ function Step3Form({
           )}
         </div>
 
+        {viewingImage && (
+          <ImageViewer
+            imageUrl={viewingImage}
+            onClose={() => setViewingImage(null)}
+          />
+        )}
+
         <div className="flex space-x-4">
           <button
             type="button"
@@ -429,9 +672,10 @@ function Step3Form({
           </button>
           <button
             type="submit"
-            className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+            disabled={isSubmitting}
+            className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
           >
-            Submit Order
+            {isSubmitting ? 'Submitting...' : 'Submit Order'}
           </button>
         </div>
       </form>
@@ -440,6 +684,7 @@ function Step3Form({
 }
 
 export default function NewStitchingPage() {
+  const router = useRouter();
   const { resetKey } = useNewStitching();
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [customers, setCustomers] = useState<Customer[]>([]);
@@ -477,7 +722,9 @@ export default function NewStitchingPage() {
   useEffect(() => {
     async function fetchCustomers() {
       try {
-        const response = await fetch('/api/customers');
+        const response = await fetch('/api/customers', {
+          credentials: 'include',
+        });
         if (response.ok) {
           const data = await response.json();
           setCustomers(data);
@@ -497,7 +744,9 @@ export default function NewStitchingPage() {
     async function fetchClothTypes() {
       try {
         setClothTypesLoading(true);
-        const response = await fetch('/api/cloth-types');
+        const response = await fetch('/api/cloth-types', {
+          credentials: 'include',
+        });
         if (response.ok) {
           const data = await response.json();
           setClothTypes(data);
@@ -515,20 +764,25 @@ export default function NewStitchingPage() {
 
   const handleCustomerSelect = (customer: Customer) => {
     setSelectedCustomer(customer);
-    setStep(2);
   };
 
   const handleClothTypeSelect = (type: ClothType) => {
     setSelectedClothType(type);
-    setStep(3);
   };
 
   const handleAddMeasurement = (data: MeasurementFormData) => {
     if (!selectedClothType) return;
-    const newMeasurements = [
-      { name: 'Waist', value: data.waist },
-      { name: 'Length', value: data.length },
-    ];
+    const newMeasurements: Measurement[] = [];
+    if (data.waist) newMeasurements.push({ name: 'Waist', value: data.waist });
+    if (data.length) newMeasurements.push({ name: 'Length', value: data.length });
+    if (data.shoulderWidth) newMeasurements.push({ name: 'Shoulder Width', value: data.shoulderWidth });
+    if (data.chest) newMeasurements.push({ name: 'Chest', value: data.chest });
+    if (data.hip) newMeasurements.push({ name: 'Hip', value: data.hip });
+    if (data.bicep) newMeasurements.push({ name: 'Bicep', value: data.bicep });
+    if (data.neck) newMeasurements.push({ name: 'Neck', value: data.neck });
+    if (data.collar) newMeasurements.push({ name: 'Collar', value: data.collar });
+    if (data.sleeve) newMeasurements.push({ name: 'Sleeve', value: data.sleeve });
+    if (data.notes) newMeasurements.push({ name: 'Notes', value: data.notes });
     setMeasurements(newMeasurements);
     setMeasurementImages(data.images);
   };
@@ -571,9 +825,26 @@ export default function NewStitchingPage() {
         return;
       }
 
+      // Upload images to Cloudinary
+      let measurementImageUrls: string[] = [];
+      let clothImageUrls: string[] = [];
+
+      try {
+        if (measurementImages.length > 0) {
+          measurementImageUrls = await uploadImages(measurementImages, 'tailor-app/measurements');
+        }
+        if (clothImages.length > 0) {
+          clothImageUrls = await uploadImages(clothImages, 'tailor-app/cloths');
+        }
+      } catch (uploadError) {
+        console.error('Error uploading images:', uploadError);
+        alert('Failed to upload images. Please check your Cloudinary configuration and try again.');
+        return;
+      }
+
       const orderData = {
         customerId: selectedCustomer.id,
-        clothType: selectedClothType,
+        clothType: selectedClothType.name,
         stitchingType: formData.stitchingType,
         measurementsGiven: formData.measurementsGiven,
         numberOfItems: formData.numberOfItems,
@@ -581,6 +852,16 @@ export default function NewStitchingPage() {
         deliveryDate: formData.deliveryDate,
         waist: measurements.find(m => m.name === 'Waist')?.value || null,
         length: measurements.find(m => m.name === 'Length')?.value || null,
+        shoulderWidth: measurements.find(m => m.name === 'Shoulder Width')?.value || null,
+        chest: measurements.find(m => m.name === 'Chest')?.value || null,
+        hip: measurements.find(m => m.name === 'Hip')?.value || null,
+        bicep: measurements.find(m => m.name === 'Bicep')?.value || null,
+        neck: measurements.find(m => m.name === 'Neck')?.value || null,
+        collar: measurements.find(m => m.name === 'Collar')?.value || null,
+        sleeve: measurements.find(m => m.name === 'Sleeve')?.value || null,
+        notes: measurements.find(m => m.name === 'Notes')?.value || null,
+        measurementImages: measurementImageUrls.length > 0 ? JSON.stringify(measurementImageUrls) : null,
+        clothImages: clothImageUrls.length > 0 ? JSON.stringify(clothImageUrls) : null,
       };
 
       console.log('Submitting order:', orderData);
@@ -590,24 +871,14 @@ export default function NewStitchingPage() {
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include',
         body: JSON.stringify(orderData),
       });
 
       if (response.ok) {
         const order = await response.json();
         alert(`Order submitted successfully! Order ID: ${order.id}`);
-        // Reset form to step 1
-        setStep(1);
-        setSelectedCustomer(null);
-        setSelectedClothType(null);
-        setMeasurements([]);
-        setClothImages([]);
-        setMeasurementImages([]);
-        setIsMeasurementModalOpen(false);
-        setSearchTerm('');
-        setCurrentPage(1);
-        setClothTypeSearchTerm('');
-        setClothTypeCurrentPage(1);
+        router.push('/dashboard');
       } else {
         const error = await response.json();
         console.error('API error:', error);
@@ -625,7 +896,7 @@ export default function NewStitchingPage() {
         <h1 className="text-3xl font-bold text-center mb-8 text-black dark:text-white">New Stitching Order</h1>
 
         {step === 1 && (
-          <div>
+          <div className="transition-opacity duration-300 ease-in-out">
             <h2 className="text-2xl font-semibold mb-4 text-black dark:text-white">Select Customer</h2>
 
             {/* Search Input */}
@@ -742,11 +1013,22 @@ export default function NewStitchingPage() {
                 )}
               </>
             )}
+            
+            {/* Navigation Buttons */}
+            <div className="mt-6">
+              <button
+                onClick={() => setStep(2)}
+                disabled={!selectedCustomer}
+                className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+              >
+                Next
+              </button>
+            </div>
           </div>
         )}
 
         {step === 2 && selectedCustomer && (
-          <div>
+          <div className="transition-opacity duration-300 ease-in-out animate-fade-in">
             <h2 className="text-2xl font-semibold mb-4 text-black dark:text-white">Select Cloth Type for {selectedCustomer.name}</h2>
 
             {/* Cloth Type Search Input */}
@@ -853,12 +1135,22 @@ export default function NewStitchingPage() {
               </>
             )}
 
-            <button
-              onClick={() => setStep(1)}
-              className="mt-4 px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
-            >
-              Back
-            </button>
+            {/* Navigation Buttons */}
+            <div className="mt-6 flex gap-4">
+              <button
+                onClick={() => setStep(1)}
+                className="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
+              >
+                Back
+              </button>
+              <button
+                onClick={() => setStep(3)}
+                disabled={!selectedClothType}
+                className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+              >
+                Next
+              </button>
+            </div>
           </div>
         )}
 

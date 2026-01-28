@@ -1,16 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
-import jwt from 'jsonwebtoken';
+import { jwtVerify } from 'jose';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
+const secret = new TextEncoder().encode(JWT_SECRET);
 
-const publicRoutes = ['/', '/login'];
-const apiPublicRoutes = ['/api/auth/login', '/api/health'];
+const publicRoutes = ['/', '/login', '/signup', '/shop-setup'];
+const apiPublicRoutes = ['/api/auth/login', '/api/auth/signup', '/api/health'];
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Check if it's a public route
-  const isPublicRoute = publicRoutes.some(route => pathname.startsWith(route));
+  // Check if it's a public route (exact match for '/', startsWith for others)
+  const isPublicRoute = pathname === '/' || publicRoutes.slice(1).some(route => pathname.startsWith(route));
   const isPublicApi = apiPublicRoutes.some(route => pathname.startsWith(route));
 
   if (isPublicRoute || isPublicApi) {
@@ -35,8 +36,13 @@ export function middleware(request: NextRequest) {
 
   // Verify token
   try {
-    jwt.verify(token, JWT_SECRET);
-    return NextResponse.next();
+    await jwtVerify(token, secret);
+    const response = NextResponse.next();
+    // Prevent caching of protected pages
+    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+    response.headers.set('Pragma', 'no-cache');
+    response.headers.set('Expires', '0');
+    return response;
   } catch (error) {
     // Invalid token
     if (pathname.startsWith('/api/')) {

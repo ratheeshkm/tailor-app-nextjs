@@ -1,18 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/app/lib/prisma';
+import jwt from 'jsonwebtoken';
 
 // Prevent static generation for this API route
 export const dynamic = 'force-dynamic';
 
-const globalForPrisma = globalThis as unknown as {
-  prisma: PrismaClient | undefined;
-};
-
-const prisma = globalForPrisma.prisma ?? new PrismaClient();
-
-if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
-
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     if (!process.env.DATABASE_URL) {
       return NextResponse.json(
@@ -21,7 +14,22 @@ export async function GET() {
       );
     }
 
+    // Get user ID from JWT token
+    const token = request.cookies.get('authToken')?.value;
+    if (!token) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
+    const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+    const decoded = jwt.verify(token, JWT_SECRET) as { id: number };
+
     const customers = await prisma.customer.findMany({
+      where: {
+        userId: decoded.id,
+      },
       orderBy: { createdAt: 'desc' },
     });
     return NextResponse.json(customers);
@@ -48,9 +56,22 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid mobile number. Must be 10 digits.' }, { status: 400 });
     }
 
+    // Get user ID from JWT token
+    const token = request.cookies.get('authToken')?.value;
+    if (!token) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
+    const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+    const decoded = jwt.verify(token, JWT_SECRET) as { id: number };
+
     await prisma.$connect();
     const customer = await prisma.customer.create({
       data: {
+        userId: decoded.id,
         name,
         mobile,
       },

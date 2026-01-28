@@ -95,17 +95,9 @@ export default function CustomersPage() {
           </div>
         ) : filteredCustomers.length === 0 ? (
           <div className="text-center py-8">
-            <p className="text-gray-600 dark:text-gray-400 mb-4">
+            <p className="text-gray-600 dark:text-gray-400">
               {searchTerm ? 'No customers found matching your search.' : 'No customers yet.'}
             </p>
-            {!searchTerm && (
-              <Link
-                href="/add-customer"
-                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors inline-block"
-              >
-                Add First Customer
-              </Link>
-            )}
           </div>
         ) : (
           <>
@@ -136,7 +128,7 @@ export default function CustomersPage() {
                       </td>
                       <td className="px-6 py-4 text-sm">
                         <button
-                          onClick={() => router.push(`/?customerId=${customer.id}`)}
+                          onClick={() => router.push(`/dashboard?customerId=${customer.id}`)}
                           className="px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white text-xs font-semibold rounded transition-colors"
                         >
                           View Orders

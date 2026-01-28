@@ -1,6 +1,6 @@
 {
-  "name": "Devu Tailer Shop - Stitching Order Management",
-  "short_name": "Devu Tailer Shop",
+  "name": "Stitching Order Management",
+  "short_name": "Stitching",
   "description": "Manage your stitching orders with ease",
   "start_url": "/",
   "scope": "/",

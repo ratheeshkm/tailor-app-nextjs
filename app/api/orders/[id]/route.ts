@@ -1,16 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/app/lib/prisma';
 
 // Prevent static generation for this API route
 export const dynamic = 'force-dynamic';
-
-const globalForPrisma = globalThis as unknown as {
-  prisma: PrismaClient | undefined;
-};
-
-const prisma = globalForPrisma.prisma ?? new PrismaClient();
-
-if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
 
 export async function GET(
   request: NextRequest,
@@ -101,6 +93,36 @@ export async function PUT(
     }
     if (data.length !== undefined) {
       updateData.length = data.length;
+    }
+    if (data.shoulderWidth !== undefined) {
+      updateData.shoulderWidth = data.shoulderWidth;
+    }
+    if (data.chest !== undefined) {
+      updateData.chest = data.chest;
+    }
+    if (data.hip !== undefined) {
+      updateData.hip = data.hip;
+    }
+    if (data.bicep !== undefined) {
+      updateData.bicep = data.bicep;
+    }
+    if (data.neck !== undefined) {
+      updateData.neck = data.neck;
+    }
+    if (data.collar !== undefined) {
+      updateData.collar = data.collar;
+    }
+    if (data.sleeve !== undefined) {
+      updateData.sleeve = data.sleeve;
+    }
+    if (data.notes !== undefined) {
+      updateData.notes = data.notes;
+    }
+    if (data.measurementImages !== undefined) {
+      updateData.measurementImages = data.measurementImages;
+    }
+    if (data.clothImages !== undefined) {
+      updateData.clothImages = data.clothImages;
     }
 
     // Update order

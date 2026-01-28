@@ -12,15 +12,33 @@ datasource db {
 }
 
 model User {
-  id        Int      @id @default(autoincrement())
-  username  String   @unique
+  id        Int        @id @default(autoincrement())
+  username  String     @unique
+  name      String
+  email     String?
   password  String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  shop      Shop?
+  customers Customer[]
+  orders    Order[]
+}
+
+model Shop {
+  id          Int      @id @default(autoincrement())
+  userId      Int      @unique
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  shopName    String
+  phoneNumber String
+  address     String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
 model Customer {
   id        Int      @id @default(autoincrement())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   name      String
   mobile    String
   createdAt DateTime @default(now())
@@ -30,6 +48,8 @@ model Customer {
 
 model Order {
   id                 Int      @id @default(autoincrement())
+  userId             Int
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   customerId         Int
   customer           Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
   clothType          String
@@ -40,6 +60,16 @@ model Order {
   deliveryDate       String
   waist              String?
   length             String?
+  shoulderWidth      String?
+  chest              String?
+  hip                String?
+  bicep              String?
+  neck               String?
+  collar             String?
+  sleeve             String?
+  notes              String?
+  measurementImages  String?  // JSON string to store image URLs/paths
+  clothImages        String?  // JSON string to store cloth image URLs/paths
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
 }

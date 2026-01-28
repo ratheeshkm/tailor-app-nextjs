@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import Header from "./components/Header";
+import LayoutWrapper from "./components/LayoutWrapper";
 import { NewStitchingProvider } from "./contexts/NewStitchingContext";
 
 const geistSans = Geist({
@@ -15,13 +15,13 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Devu Tailer Shop - Stitching Order Management",
+  title: "Stitching Order Management",
   description: "Manage your stitching orders with ease. Track customer orders, measurements, and delivery dates.",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "Devu Tailer Shop",
+    title: "Stitching Order Management",
   },
   formatDetection: {
     telephone: false,
@@ -71,8 +71,9 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <NewStitchingProvider>
-          <Header />
-          {children}
+          <LayoutWrapper>
+            {children}
+          </LayoutWrapper>
         </NewStitchingProvider>
       </body>
     </html>
