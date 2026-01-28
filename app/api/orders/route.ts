@@ -78,8 +78,8 @@ export async function POST(request: NextRequest) {
     const notes = data.notes?.toString().trim() || null;
 
     // Image fields (placeholder - in production, upload to storage service like S3)
-    const measurementImages = data.measurementImages || null;
-    const clothImages = data.clothImages || null;
+    const measurementImages: string | null = data.measurementImages ? String(data.measurementImages) : null;
+    const clothImages: string | null = data.clothImages ? String(data.clothImages) : null;
 
     if (!customerId || !clothType || !stitchingType || !measurementsGiven || !numberOfItems || charge === null || !deliveryDate) {
       console.error('Validation failed:', {
