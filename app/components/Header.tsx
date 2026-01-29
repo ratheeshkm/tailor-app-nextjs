@@ -81,32 +81,18 @@ export default function Header() {
               >
                 Orders
               </button>
-              <div className="relative" ref={customersMenuRef}>
-                <button
-                  onClick={() => setIsCustomersOpen(!isCustomersOpen)}
-                  className="text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium"
-                >
-                  Customers
-                </button>
-                {isCustomersOpen && (
-                  <div className="absolute z-10 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg">
-                    <Link
-                      href="/customers"
-                      className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-                      onClick={() => setIsCustomersOpen(false)}
-                    >
-                      Customer List
-                    </Link>
-                    <Link
-                      href="/add-customer"
-                      className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-                      onClick={() => setIsCustomersOpen(false)}
-                    >
-                      Add Customer
-                    </Link>
-                  </div>
-                )}
-              </div>
+              <Link
+                href="/customers"
+                className="text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium"
+              >
+                Customer List
+              </Link>
+              <Link
+                href="/add-customer"
+                className="text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium"
+              >
+                Add Customer
+              </Link>
               <button
                 onClick={async () => {
                   try {
@@ -202,41 +188,24 @@ export default function Header() {
               >
                 Orders
               </button>
-              <div>
-                <button
-                  onClick={() => setIsCustomersOpen(!isCustomersOpen)}
-                  className="text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white block w-full text-left px-3 py-2 rounded-md text-base font-medium transition-colors duration-200"
-                >
-                  Customers
-                  <svg className={`ml-2 h-5 w-5 inline transition-transform duration-200 ${isCustomersOpen ? 'rotate-180' : ''}`} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                  </svg>
-                </button>
-                {isCustomersOpen && (
-                  <div className="mt-2 ml-4 space-y-1 opacity-100 transition-opacity duration-200">
-                    <Link
-                      href="/customers"
-                      className="block px-3 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md transition-colors duration-200"
-                      onClick={() => {
-                        setIsMenuOpen(false);
-                        setIsCustomersOpen(false);
-                      }}
-                    >
-                      Customer List
-                    </Link>
-                    <Link
-                      href="/add-customer"
-                      className="block px-3 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md transition-colors duration-200"
-                      onClick={() => {
-                        setIsMenuOpen(false);
-                        setIsCustomersOpen(false);
-                      }}
-                    >
-                      Add Customer
-                    </Link>
-                  </div>
-                )}
-              </div>
+              <button
+                onClick={() => {
+                  setIsMenuOpen(false);
+                  router.push('/customers');
+                }}
+                className="text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white block w-full text-left px-3 py-2 rounded-md text-base font-medium transition-colors duration-200 cursor-pointer"
+              >
+                Customer List
+              </button>
+              <button
+                onClick={() => {
+                  setIsMenuOpen(false);
+                  router.push('/add-customer');
+                }}
+                className="text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white block w-full text-left px-3 py-2 rounded-md text-base font-medium transition-colors duration-200 cursor-pointer"
+              >
+                Add Customer
+              </button>
               <hr className="my-2 dark:border-gray-700" />
               <button
                 onClick={async () => {
