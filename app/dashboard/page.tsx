@@ -219,7 +219,12 @@ export default function Dashboard() {
                   <div className="flex justify-between items-start mb-4">
                     <div>
                       <h3 className="text-lg font-semibold text-black dark:text-white">{order.customer.name}</h3>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">{order.customer.mobile}</p>
+                      <a 
+                        href={`tel:${order.customer.mobile}`}
+                        className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
+                      >
+                        {order.customer.mobile}
+                      </a>
                     </div>
                     <span className={`px-3 py-1 rounded-full text-xs font-semibold ${deliveryStatus.color}`}>
                       {deliveryStatus.label}

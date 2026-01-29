@@ -160,6 +160,7 @@ export async function POST(request: NextRequest) {
 export async function GET(request: NextRequest) {
   try {
     if (!process.env.DATABASE_URL) {
+      console.error('DATABASE_URL not configured');
       return NextResponse.json(
         { error: 'Database not configured' },
         { status: 503 }
@@ -169,6 +170,7 @@ export async function GET(request: NextRequest) {
     // Get user ID from JWT token
     const token = request.cookies.get('authToken')?.value;
     if (!token) {
+      console.error('No auth token found');
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
@@ -176,7 +178,16 @@ export async function GET(request: NextRequest) {
     }
 
     const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
-    const decoded = jwt.verify(token, JWT_SECRET) as { id: number };
+    let decoded;
+    try {
+      decoded = jwt.verify(token, JWT_SECRET) as { id: number };
+    } catch (jwtError) {
+      console.error('JWT verification failed:', jwtError);
+      return NextResponse.json(
+        { error: 'Invalid token' },
+        { status: 401 }
+      );
+    }
 
     // Fetch orders only for the logged-in user
     const orders = await prisma.order.findMany({
@@ -192,7 +203,7 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('Error fetching orders:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch orders' },
+      { error: 'Failed to fetch orders', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     );
   }

@@ -123,8 +123,13 @@ export default function CustomersPage() {
                       <td className="px-6 py-4 text-sm text-gray-900 dark:text-gray-100">
                         {customer.name}
                       </td>
-                      <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
-                        {customer.mobile}
+                      <td className="px-6 py-4 text-sm">
+                        <a 
+                          href={`tel:${customer.mobile}`}
+                          className="text-blue-600 dark:text-blue-400 hover:underline"
+                        >
+                          {customer.mobile}
+                        </a>
                       </td>
                       <td className="px-6 py-4 text-sm">
                         <button
