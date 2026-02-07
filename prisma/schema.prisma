@@ -71,6 +71,7 @@ model Order {
   measurementImages  String?  // JSON string to store image URLs/paths
   clothImages        String?  // JSON string to store cloth image URLs/paths
   status             String   @default("pending") // pending | completed | delivered
+  paymentType        String   @default("Cash")    // Cash | GPay
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
 }

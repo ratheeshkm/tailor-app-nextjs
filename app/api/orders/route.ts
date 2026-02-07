@@ -24,6 +24,7 @@ export async function POST(request: NextRequest) {
         numberOfItems: formData.get('numberOfItems'),
         charge: formData.get('charge'),
         deliveryDate: formData.get('deliveryDate'),
+        paymentType: formData.get('paymentType') || 'Cash',
         waist: formData.get('waist'),
         length: formData.get('length'),
       };
@@ -66,6 +67,9 @@ export async function POST(request: NextRequest) {
     const deliveryDate = data.deliveryDate?.toString().trim();
     
     // Optional fields
+    const paymentType = ['Cash', 'GPay'].includes(String(data.paymentType || 'Cash').trim())
+      ? String(data.paymentType || 'Cash').trim()
+      : 'Cash';
     const waist = data.waist?.toString().trim() || null;
     const length = data.length?.toString().trim() || null;
     const shoulderWidth = data.shoulderWidth?.toString().trim() || null;
@@ -123,6 +127,7 @@ export async function POST(request: NextRequest) {
           charge,
           deliveryDate,
           status: 'pending',
+          paymentType,
           waist,
           length,
           shoulderWidth,

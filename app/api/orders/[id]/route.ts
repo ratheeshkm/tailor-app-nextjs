@@ -135,6 +135,10 @@ export async function PUT(
     if (statusValue !== undefined) {
       updateData.status = statusValue;
     }
+    if (data.paymentType !== undefined) {
+      const pt = String(data.paymentType).trim();
+      if (['Cash', 'GPay'].includes(pt)) updateData.paymentType = pt;
+    }
 
     let order;
     try {
@@ -147,11 +151,11 @@ export async function PUT(
       });
     } catch (updateError) {
       const errMsg = updateError instanceof Error ? updateError.message : String(updateError);
-      const isStatusColumnError =
-        updateData.status !== undefined &&
-        (errMsg.includes('status') || errMsg.includes('column') || errMsg.includes('does not exist') || errMsg.includes('Unknown arg'));
-      if (isStatusColumnError) {
+      const isSchemaError =
+        (errMsg.includes('status') || errMsg.includes('paymentType') || errMsg.includes('payment') || errMsg.includes('column') || errMsg.includes('does not exist') || errMsg.includes('Unknown arg'));
+      if (isSchemaError) {
         delete updateData.status;
+        delete updateData.paymentType;
         order = await prisma.order.update({
           where: { id: orderId },
           data: updateData,

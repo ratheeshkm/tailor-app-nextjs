@@ -579,14 +579,7 @@ function Step3Form({
             type="date"
             {...register('deliveryDate', {
               required: 'Delivery Date is required',
-              validate: (value) => {
-                const selectedDate = new Date(value);
-                const today = new Date();
-                today.setHours(0, 0, 0, 0);
-                return selectedDate >= today || 'Delivery date cannot be in the past';
-              },
             })}
-            min={new Date().toISOString().split('T')[0]}
             className="w-full max-w-xs px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-black dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
           {errors.deliveryDate && (

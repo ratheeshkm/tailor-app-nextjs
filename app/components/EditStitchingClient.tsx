@@ -16,6 +16,8 @@ type ClothType = 'Pants' | 'Shirts' | 'Dresses' | 'Jackets';
 
 type OrderStatus = 'pending' | 'completed' | 'delivered';
 
+type PaymentType = 'Cash' | 'GPay';
+
 type Step3FormData = {
   stitchingType: 'Stitching' | 'Alteration';
   measurementsGiven: 'Yes' | 'No';
@@ -23,6 +25,7 @@ type Step3FormData = {
   charge: number;
   deliveryDate: string;
   status: OrderStatus;
+  paymentType: PaymentType;
 };
 
 type Measurement = {
@@ -189,6 +192,19 @@ const Step3Form = ({
               {errors.deliveryDate.message}
             </p>
           )}
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-black dark:text-white mb-2">
+            Payment Type
+          </label>
+          <select
+            {...register('paymentType')}
+            className="w-full max-w-xs px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-black dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="Cash">Cash</option>
+            <option value="GPay">GPay</option>
+          </select>
         </div>
           </div>
 
@@ -657,6 +673,7 @@ interface Order {
   charge: number;
   deliveryDate: string;
   status?: string;
+  paymentType?: string;
   waist: string | null;
   length: string | null;
   shoulderWidth?: string | null;
@@ -822,6 +839,7 @@ export default function EditStitchingClient() {
         stitchingType: formData.stitchingType,
         measurementsGiven: formData.measurementsGiven,
         status: formData.status,
+        paymentType: formData.paymentType,
         numberOfItems: formData.numberOfItems,
         charge: formData.charge,
         deliveryDate: formData.deliveryDate,
@@ -968,6 +986,7 @@ export default function EditStitchingClient() {
                 charge: order.charge,
                 deliveryDate: order.deliveryDate,
                 status: (order.status as OrderStatus) || 'pending',
+                paymentType: (order.paymentType as PaymentType) || 'Cash',
               }}
               isSubmitting={submitting}
               clothImages={clothImages}
