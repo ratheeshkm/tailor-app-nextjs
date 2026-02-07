@@ -1,12 +1,11 @@
 'use server';
 
 import { cookies } from 'next/headers';
+import { prisma } from '@/app/lib/prisma';
+import bcryptjs from 'bcryptjs';
+import jwt from 'jsonwebtoken';
 
-function getBaseUrl(): string {
-  if (process.env.NEXT_PUBLIC_BASE_URL) return process.env.NEXT_PUBLIC_BASE_URL;
-  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
-  return 'http://localhost:3000';
-}
+const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
 
 interface LoginResult {
   success: boolean;
@@ -15,8 +14,9 @@ interface LoginResult {
 }
 
 export async function loginAction(formData: FormData): Promise<LoginResult> {
-  const username = formData.get('username') as string;
-  const password = formData.get('password') as string;
+  // Server Actions may serialize form fields with prefixes (e.g. 1_username, 1_password)
+  const username = (formData.get('username') ?? formData.get('1_username') ?? '') as string;
+  const password = (formData.get('password') ?? formData.get('1_password') ?? '') as string;
 
   // Validate
   if (!username || username.length < 3) {
@@ -28,37 +28,37 @@ export async function loginAction(formData: FormData): Promise<LoginResult> {
   }
 
   try {
-    const baseUrl = getBaseUrl();
-    const response = await fetch(`${baseUrl}/api/auth/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, password }),
+    const user = await prisma.user.findUnique({
+      where: { username },
+      include: { shop: true },
     });
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      return { success: false, error: errorData.error || 'Login failed' };
+    if (!user) {
+      return { success: false, error: 'Invalid username or password' };
     }
 
-    const result = await response.json();
-
-    // Set the auth cookie using token from response (more reliable than parsing Set-Cookie)
-    const token = result.token;
-    if (token) {
-      const cookieStore = await cookies();
-      const isProduction = process.env.NODE_ENV === 'production';
-      cookieStore.set('authToken', token, {
-        httpOnly: true,
-        secure: isProduction,
-        sameSite: 'lax',
-        path: '/',
-        maxAge: 60 * 60 * 24 * 7, // 7 days
-      });
+    const isPasswordValid = await bcryptjs.compare(password, user.password);
+    if (!isPasswordValid) {
+      return { success: false, error: 'Invalid username or password' };
     }
 
-    // Determine redirect
-    const redirectTo = result.hasShop ? '/dashboard' : '/shop-setup';
+    const token = jwt.sign(
+      { id: user.id, username: user.username },
+      JWT_SECRET,
+      { expiresIn: '7d' }
+    );
 
+    const cookieStore = await cookies();
+    const isProduction = process.env.NODE_ENV === 'production';
+    cookieStore.set('authToken', token, {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 60 * 60 * 24 * 7, // 7 days
+    });
+
+    const redirectTo = user.shop ? '/dashboard' : '/shop-setup';
     return { success: true, redirectTo };
   } catch (error) {
     console.error('Login error:', error);
