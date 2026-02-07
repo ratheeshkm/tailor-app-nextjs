@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 
 interface Customer {
   id: number;
@@ -19,12 +20,14 @@ interface Order {
   numberOfItems: number;
   charge: number;
   deliveryDate: string;
+  status?: string;
   waist: string | null;
   length: string | null;
   createdAt: string;
 }
 
-export default function Dashboard() {
+export default function DashboardClient() {
+  const searchParams = useSearchParams();
   const [orders, setOrders] = useState<Order[]>([]);
   const [filteredOrders, setFilteredOrders] = useState<Order[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -32,17 +35,24 @@ export default function Dashboard() {
   const [currentPage, setCurrentPage] = useState(1);
   const [customerFilter, setCustomerFilter] = useState<number | null>(null);
   const [filterCustomerName, setFilterCustomerName] = useState<string>('');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'completed' | 'delivered'>('all');
   const itemsPerPage = 12;
 
+  const getOrderStatus = (order: Order): 'pending' | 'completed' | 'delivered' => {
+    const s = order.status?.toLowerCase();
+    if (s === 'completed' || s === 'delivered') return s;
+    return 'pending';
+  };
+
   useEffect(() => {
-    const searchParams = new URLSearchParams(window.location.search);
     const customerId = searchParams.get('customerId');
     if (customerId) {
       setCustomerFilter(parseInt(customerId));
     } else {
       setCustomerFilter(null);
+      setFilterCustomerName('');
     }
-  }, []);
+  }, [searchParams]);
 
   useEffect(() => {
     fetchOrders();
@@ -69,16 +79,17 @@ export default function Dashboard() {
   useEffect(() => {
     let filtered = orders;
 
-    // Apply customer filter first if present
     if (customerFilter) {
       filtered = filtered.filter((order) => order.customerId === customerFilter);
-      // Find customer name for display
       if (filtered.length > 0) {
         setFilterCustomerName(filtered[0].customer.name);
       }
     }
 
-    // Single search query that searches across name, mobile, and delivery date
+    if (statusFilter !== 'all') {
+      filtered = filtered.filter((order) => getOrderStatus(order) === statusFilter);
+    }
+
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter((order) => {
@@ -86,14 +97,18 @@ export default function Dashboard() {
         const mobileMatch = order.customer.mobile.includes(searchQuery);
         const dateMatch = order.deliveryDate.includes(searchQuery);
         const createdDateMatch = order.createdAt.includes(searchQuery);
-        
+
         return nameMatch || mobileMatch || dateMatch || createdDateMatch;
       });
     }
 
     setFilteredOrders(filtered);
     setCurrentPage(1);
-  }, [searchQuery, orders, customerFilter]);
+  }, [searchQuery, orders, customerFilter, statusFilter]);
+
+  const pendingCount = orders.filter((o) => getOrderStatus(o) === 'pending').length;
+  const completedCount = orders.filter((o) => getOrderStatus(o) === 'completed').length;
+  const deliveredCount = orders.filter((o) => getOrderStatus(o) === 'delivered').length;
 
   const getDeliveryStatus = (deliveryDate: string) => {
     const today = new Date();
@@ -161,9 +176,8 @@ export default function Dashboard() {
             </Link>
           </div>
 
-          {/* Search Section */}
-          <div className="mb-6">
-            <div className="relative max-w-md">
+          <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="relative flex-1 max-w-md">
               <input
                 type="text"
                 placeholder="Search by customer name, mobile number, or date..."
@@ -187,9 +201,54 @@ export default function Dashboard() {
                 </button>
               )}
             </div>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => setStatusFilter('all')}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  statusFilter === 'all'
+                    ? 'bg-blue-500 text-white'
+                    : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+                }`}
+              >
+                All ({orders.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setStatusFilter('pending')}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  statusFilter === 'pending'
+                    ? 'bg-blue-500 text-white'
+                    : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+                }`}
+              >
+                Pending ({pendingCount})
+              </button>
+              <button
+                type="button"
+                onClick={() => setStatusFilter('completed')}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  statusFilter === 'completed'
+                    ? 'bg-blue-500 text-white'
+                    : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+                }`}
+              >
+                Completed ({completedCount})
+              </button>
+              <button
+                type="button"
+                onClick={() => setStatusFilter('delivered')}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  statusFilter === 'delivered'
+                    ? 'bg-blue-500 text-white'
+                    : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+                }`}
+              >
+                Delivered ({deliveredCount})
+              </button>
+            </div>
           </div>
 
-          {/* Result Count */}
           <div className="mb-4">
             <div className="text-sm text-gray-600 dark:text-gray-400">
               Showing {paginatedOrders.length} of {filteredOrders.length} orders
@@ -197,13 +256,16 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Orders Grid */}
         {loading ? (
           <div className="text-center py-8">Loading orders...</div>
         ) : paginatedOrders.length === 0 ? (
           <div className="text-center py-8 text-gray-600 dark:text-gray-400">
-            {filteredOrders.length === 0 
-              ? (customerFilter ? 'No orders found for this customer' : 'No orders found') 
+            {filteredOrders.length === 0
+              ? (customerFilter
+                  ? 'No orders found for this customer'
+                  : statusFilter !== 'all'
+                    ? `No ${statusFilter} orders found`
+                    : 'No orders found')
               : 'No more orders to display'}
           </div>
         ) : (
@@ -215,11 +277,10 @@ export default function Dashboard() {
                   key={order.id}
                   className="border border-gray-300 dark:border-gray-700 rounded-lg p-6 hover:shadow-lg transition-shadow bg-white dark:bg-gray-800"
                 >
-                  {/* Header with Status */}
                   <div className="flex justify-between items-start mb-4">
                     <div>
                       <h3 className="text-lg font-semibold text-black dark:text-white">{order.customer.name}</h3>
-                      <a 
+                      <a
                         href={`tel:${order.customer.mobile}`}
                         className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
                       >
@@ -231,13 +292,12 @@ export default function Dashboard() {
                     </span>
                   </div>
 
-                  {/* Order Details */}
                   <div className="space-y-2 mb-4">
                     <div className="flex justify-between">
                       <span className="text-sm text-gray-600 dark:text-gray-400">Cloth Type:</span>
                       <span className="text-sm font-medium text-black dark:text-white">
-                        {typeof order.clothType === 'string' && order.clothType !== '[object Object]' 
-                          ? order.clothType 
+                        {typeof order.clothType === 'string' && order.clothType !== '[object Object]'
+                          ? order.clothType
                           : 'N/A'}
                       </span>
                     </div>
@@ -255,11 +315,12 @@ export default function Dashboard() {
                     </div>
                     <div className="flex justify-between">
                       <span className="text-sm text-gray-600 dark:text-gray-400">Delivery Date:</span>
-                      <span className="text-sm font-medium text-black dark:text-white">{new Date(order.deliveryDate).toLocaleDateString()}</span>
+                      <span className="text-sm font-medium text-black dark:text-white">
+                        {new Date(order.deliveryDate).toLocaleDateString()}
+                      </span>
                     </div>
                   </div>
 
-                  {/* Order ID */}
                   <div className="text-xs text-gray-500 dark:text-gray-400 mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 flex justify-between items-center">
                     <span>Order ID: #{order.id}</span>
                     <Link
@@ -275,7 +336,6 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* Pagination */}
         {totalPages > 1 && (
           <div className="flex justify-center gap-2 mb-8">
             {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
@@ -293,8 +353,8 @@ export default function Dashboard() {
             ))}
           </div>
         )}
-
       </div>
     </main>
   );
 }
+

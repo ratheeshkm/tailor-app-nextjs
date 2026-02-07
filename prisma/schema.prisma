@@ -70,6 +70,7 @@ model Order {
   notes              String?
   measurementImages  String?  // JSON string to store image URLs/paths
   clothImages        String?  // JSON string to store cloth image URLs/paths
+  status             String   @default("pending") // pending | completed | delivered
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
 }

@@ -1,40 +1,29 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, startTransition } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { useNewStitching } from '../contexts/NewStitchingContext';
+import { useShop } from '../contexts/ShopContext';
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isCustomersOpen, setIsCustomersOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
-  const [shopName, setShopName] = useState('Stitching Order Management');
   const customersMenuRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const pathname = usePathname();
   const { triggerReset } = useNewStitching();
+  const { shopName } = useShop();
+  const isShopSetupPage = pathname === '/shop-setup';
+  const displayShopName = shopName ?? 'Stitching Order Management';
 
   useEffect(() => {
     setMounted(true);
-    
-    // Fetch shop name
-    const fetchShopName = async () => {
-      try {
-        const response = await fetch('/api/shop');
-        if (response.ok) {
-          const data = await response.json();
-          if (data.shop?.shopName) {
-            setShopName(data.shop.shopName);
-          }
-        }
-      } catch (error) {
-        console.error('Failed to fetch shop name:', error);
-      }
-    };
-    
-    fetchShopName();
-  }, []);
+    router.prefetch('/add-customer');
+    router.prefetch('/customers');
+    router.prefetch('/dashboard');
+  }, [router]);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -52,11 +41,6 @@ export default function Header() {
     };
   }, [isCustomersOpen]);
 
-  // Hide menu on login page (pathname === '/')
-  if (mounted && pathname === '/') {
-    return null;
-  }
-
   return (
     <>
       <header className="bg-white shadow-md dark:bg-black">
@@ -64,35 +48,38 @@ export default function Header() {
           <div className="flex justify-between items-center h-16">
             {/* Logo */}
             <Link href="/dashboard" className="flex-shrink-0 hover:opacity-80 transition-opacity">
-              <h1 className="text-xl font-bold text-black dark:text-white">{shopName}</h1>
+              <h1 className="text-xl font-bold text-black dark:text-white">{displayShopName}</h1>
             </Link>
 
             {/* Desktop Navigation */}
             <nav className="hidden md:flex space-x-8 items-center">
-              <button
-                onClick={() => {
-                  if (pathname === '/dashboard') {
-                    window.location.href = '/dashboard';
-                  } else {
-                    router.push('/dashboard');
-                  }
-                }}
-                className="text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium cursor-pointer"
-              >
-                Orders
-              </button>
-              <Link
-                href="/customers"
-                className="text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium"
-              >
-                Customer List
-              </Link>
-              <Link
-                href="/add-customer"
-                className="text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium"
-              >
-                Add Customer
-              </Link>
+              {!isShopSetupPage && (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      startTransition(() => router.push('/dashboard'));
+                    }}
+                    className="text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium cursor-pointer"
+                  >
+                    Orders
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => startTransition(() => router.push('/customers'))}
+                    className="text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium cursor-pointer"
+                  >
+                    Customer List
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => startTransition(() => router.push('/add-customer'))}
+                    className="text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium cursor-pointer"
+                  >
+                    Add Customer
+                  </button>
+                </>
+              )}
               <button
                 onClick={async () => {
                   try {
@@ -126,23 +113,44 @@ export default function Header() {
               </button>
             </nav>
 
-            {/* Mobile menu button */}
-            <div className="md:hidden">
-              <button
-                onClick={() => setIsMenuOpen(!isMenuOpen)}
-                className="bg-gray-200 dark:bg-gray-700 inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500"
-              >
-                <span className="sr-only">Open main menu</span>
-                {!isMenuOpen ? (
-                  <svg className="block h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
-                  </svg>
-                ) : (
-                  <svg className="block h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                )}
-              </button>
+            {/* Mobile: show only logout on shop-setup, otherwise menu button */}
+            <div className="md:hidden flex items-center">
+              {isShopSetupPage ? (
+                <button
+                  onClick={async () => {
+                    try {
+                      document.cookie = 'authToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+                      await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+                      if ('caches' in window) {
+                        caches.keys().then(names => { names.forEach(name => caches.delete(name)); });
+                      }
+                      window.location.href = `/?logout=true&t=${Date.now()}`;
+                    } catch (error) {
+                      document.cookie = 'authToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+                      window.location.href = `/?logout=true&t=${Date.now()}`;
+                    }
+                  }}
+                  className="text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium"
+                >
+                  Logout
+                </button>
+              ) : (
+                <button
+                  onClick={() => setIsMenuOpen(!isMenuOpen)}
+                  className="bg-gray-200 dark:bg-gray-700 inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500"
+                >
+                  <span className="sr-only">Open main menu</span>
+                  {!isMenuOpen ? (
+                    <svg className="block h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                  ) : (
+                    <svg className="block h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  )}
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -175,38 +183,41 @@ export default function Header() {
 
             {/* Navigation Items */}
             <nav className="space-y-2">
-              <button
-                onClick={() => {
-                  setIsMenuOpen(false);
-                  if (pathname === '/dashboard') {
-                    window.location.href = '/dashboard';
-                  } else {
-                    router.push('/dashboard');
-                  }
-                }}
-                className="text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white block w-full text-left px-3 py-2 rounded-md text-base font-medium transition-colors duration-200 cursor-pointer"
-              >
-                Orders
-              </button>
-              <button
-                onClick={() => {
-                  setIsMenuOpen(false);
-                  router.push('/customers');
-                }}
-                className="text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white block w-full text-left px-3 py-2 rounded-md text-base font-medium transition-colors duration-200 cursor-pointer"
-              >
-                Customer List
-              </button>
-              <button
-                onClick={() => {
-                  setIsMenuOpen(false);
-                  router.push('/add-customer');
-                }}
-                className="text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white block w-full text-left px-3 py-2 rounded-md text-base font-medium transition-colors duration-200 cursor-pointer"
-              >
-                Add Customer
-              </button>
-              <hr className="my-2 dark:border-gray-700" />
+              {!isShopSetupPage && (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsMenuOpen(false);
+                      startTransition(() => router.push('/dashboard'));
+                    }}
+                    className="text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white block w-full text-left px-3 py-2 rounded-md text-base font-medium transition-colors duration-200 cursor-pointer"
+                  >
+                    Orders
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsMenuOpen(false);
+                      startTransition(() => router.push('/customers'));
+                    }}
+                    className="text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white block w-full text-left px-3 py-2 rounded-md text-base font-medium transition-colors duration-200 cursor-pointer"
+                  >
+                    Customer List
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsMenuOpen(false);
+                      startTransition(() => router.push('/add-customer'));
+                    }}
+                    className="text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white block w-full text-left px-3 py-2 rounded-md text-base font-medium transition-colors duration-200 cursor-pointer"
+                  >
+                    Add Customer
+                  </button>
+                  <hr className="my-2 dark:border-gray-700" />
+                </>
+              )}
               <button
                 onClick={async () => {
                   try {

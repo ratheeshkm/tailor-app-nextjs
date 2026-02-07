@@ -1,9 +1,6 @@
-const CACHE_NAME = 'tailer-app-v1';
+const CACHE_NAME = 'tailor-app-v3';
 const urlsToCache = [
-  '/',
-  '/customers',
-  '/add-customer',
-  '/new-stitching',
+  '/stitching-favicon.svg',
   '/icon-192.svg',
   '/icon-512.svg',
   '/manifest.json',

@@ -4,22 +4,34 @@ import { jwtVerify } from 'jose';
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
 const secret = new TextEncoder().encode(JWT_SECRET);
 
-const publicRoutes = ['/', '/login', '/signup', '/shop-setup'];
-const apiPublicRoutes = ['/api/auth/login', '/api/auth/signup', '/api/health'];
+const publicRoutes = ['/', '/login', '/signup'];
+const apiPublicRoutes = ['/api/auth/login', '/api/auth/signup', '/api/health', '/api/auth/check-username'];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Check if it's a public route (exact match for '/', startsWith for others)
-  const isPublicRoute = pathname === '/' || publicRoutes.slice(1).some(route => pathname.startsWith(route));
   const isPublicApi = apiPublicRoutes.some(route => pathname.startsWith(route));
-
-  if (isPublicRoute || isPublicApi) {
+  if (isPublicApi) {
     return NextResponse.next();
   }
 
-  // Check for auth token
   const token = request.cookies.get('authToken')?.value;
+
+  // If logged in and visiting login/home, redirect to dashboard
+  if ((pathname === '/' || pathname === '/login') && token) {
+    try {
+      await jwtVerify(token, secret);
+      return NextResponse.redirect(new URL('/dashboard', request.url));
+    } catch {
+      // Invalid token, allow through to login
+    }
+  }
+
+  // Check if it's a public route (exact match for '/', startsWith for others)
+  const isPublicRoute = pathname === '/' || publicRoutes.slice(1).some(route => pathname.startsWith(route));
+  if (isPublicRoute) {
+    return NextResponse.next();
+  }
 
   if (!token) {
     // If it's an API route, return 401
@@ -58,6 +70,6 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|icon-|manifest.json|sw.js).*)',
+    '/((?!_next/static|_next/image|favicon.ico|icon-|manifest.json|sw.js|stitching-favicon\\.svg).*)',
   ],
 };

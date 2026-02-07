@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form';
 import { useNewStitching } from '../contexts/NewStitchingContext';
 import { useRouter } from 'next/navigation';
 import { uploadImages } from '../lib/cloudinary';
-import ImageViewer from '../components/ImageViewer';
+import ImageViewer from './ImageViewer';
 
 type Customer = {
   id: number;
@@ -22,7 +22,6 @@ type Measurement = {
   name: string;
   value: string;
 };
-
 
 type MeasurementFormData = {
   waist: string;
@@ -63,7 +62,6 @@ function MeasurementModal({ clothType, onClose, onSubmit }: MeasurementModalProp
   const [measurementImages, setMeasurementImages] = useState<File[]>([]);
   const [viewingImage, setViewingImage] = useState<string | null>(null);
 
-  // Prevent background scroll when modal is open
   useEffect(() => {
     document.body.style.overflow = 'hidden';
     return () => {
@@ -88,214 +86,211 @@ function MeasurementModal({ clothType, onClose, onSubmit }: MeasurementModalProp
         <h3 className="text-lg font-semibold mb-4 text-black dark:text-white">
           Enter Measurements for {clothType.name}
         </h3>
-        <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-4">
-          {/* Two Column Grid for Measurement Fields */}
+        <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-4" autoComplete="off">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-black dark:text-white mb-1">
-              Waist
-            </label>
-            <input
-              type="text"
-              {...register('waist', {
-                pattern: {
-                  value: /^\d+(\.\d+)?$/,
-                  message: 'Please enter a valid number',
-                },
-              })}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-black dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Enter waist measurement (inches)"
-            />
-            {errors.waist && (
-              <p className="mt-1 text-sm text-red-600 dark:text-red-400">
-                {errors.waist.message}
-              </p>
-            )}
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-black dark:text-white mb-1">
-              Length
-            </label>
-            <input
-              type="text"
-              {...register('length', {
-                pattern: {
-                  value: /^\d+(\.\d+)?$/,
-                  message: 'Please enter a valid number',
-                },
-              })}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-black dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Enter length (inches)"
-            />
-            {errors.length && (
-              <p className="mt-1 text-sm text-red-600 dark:text-red-400">
-                {errors.length.message}
-              </p>
-            )}
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-black dark:text-white mb-1">
-              Shoulder Width
-            </label>
-            <input
-              type="text"
-              {...register('shoulderWidth', {
-                pattern: {
-                  value: /^\d+(\.\d+)?$/,
-                  message: 'Please enter a valid number',
-                },
-              })}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-black dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Enter shoulder width (inches)"
-            />
-            {errors.shoulderWidth && (
-              <p className="mt-1 text-sm text-red-600 dark:text-red-400">
-                {errors.shoulderWidth.message}
-              </p>
-            )}
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-black dark:text-white mb-1">
-              Chest
-            </label>
-            <input
-              type="text"
-              {...register('chest', {
-                pattern: {
-                  value: /^\d+(\.\d+)?$/,
-                  message: 'Please enter a valid number',
-                },
-              })}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-black dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Enter chest measurement (inches)"
-            />
-            {errors.chest && (
-              <p className="mt-1 text-sm text-red-600 dark:text-red-400">
-                {errors.chest.message}
-              </p>
-            )}
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-black dark:text-white mb-1">
-              Hip
-            </label>
-            <input
-              type="text"
-              {...register('hip', {
-                pattern: {
-                  value: /^\d+(\.\d+)?$/,
-                  message: 'Please enter a valid number',
-                },
-              })}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-black dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Enter hip measurement (inches)"
-            />
-            {errors.hip && (
-              <p className="mt-1 text-sm text-red-600 dark:text-red-400">
-                {errors.hip.message}
-              </p>
-            )}
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-black dark:text-white mb-1">
-              Bicep
-            </label>
-            <input
-              type="text"
-              {...register('bicep', {
-                pattern: {
-                  value: /^\d+(\.\d+)?$/,
-                  message: 'Please enter a valid number',
-                },
-              })}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-black dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Enter bicep measurement (inches)"
-            />
-            {errors.bicep && (
-              <p className="mt-1 text-sm text-red-600 dark:text-red-400">
-                {errors.bicep.message}
-              </p>
-            )}
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-black dark:text-white mb-1">
-              Neck
-            </label>
-            <input
-              type="text"
-              {...register('neck', {
-                pattern: {
-                  value: /^\d+(\.\d+)?$/,
-                  message: 'Please enter a valid number',
-                },
-              })}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-black dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Enter neck measurement (inches)"
-            />
-            {errors.neck && (
-              <p className="mt-1 text-sm text-red-600 dark:text-red-400">
-                {errors.neck.message}
-              </p>
-            )}
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-black dark:text-white mb-1">
-              Collar
-            </label>
-            <input
-              type="text"
-              {...register('collar', {
-                pattern: {
-                  value: /^\d+(\.\d+)?$/,
-                  message: 'Please enter a valid number',
-                },
-              })}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-black dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Enter collar measurement (inches)"
-            />
-            {errors.collar && (
-              <p className="mt-1 text-sm text-red-600 dark:text-red-400">
-                {errors.collar.message}
-              </p>
-            )}
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-black dark:text-white mb-2">
-              Sleeve
-            </label>
-            <div className="flex gap-4">
-              <label className="flex items-center">
-                <input
-                  type="radio"
-                  value="full"
-                  {...register('sleeve')}
-                  className="mr-2"
-                />
-                <span className="text-black dark:text-white">Full</span>
+            <div>
+              <label className="block text-sm font-medium text-black dark:text-white mb-1">
+                Waist
               </label>
-              <label className="flex items-center">
-                <input
-                  type="radio"
-                  value="half"
-                  {...register('sleeve')}
-                  className="mr-2"
-                />
-                <span className="text-black dark:text-white">Half</span>
+              <input
+                type="text"
+                {...register('waist', {
+                  pattern: {
+                    value: /^\d+(\.\d+)?$/,
+                    message: 'Please enter a valid number',
+                  },
+                })}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-black dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Enter waist measurement (inches)"
+              />
+              {errors.waist && (
+                <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                  {errors.waist.message}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-black dark:text-white mb-1">
+                Length
               </label>
+              <input
+                type="text"
+                {...register('length', {
+                  pattern: {
+                    value: /^\d+(\.\d+)?$/,
+                    message: 'Please enter a valid number',
+                  },
+                })}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-black dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Enter length (inches)"
+              />
+              {errors.length && (
+                <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                  {errors.length.message}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-black dark:text-white mb-1">
+                Shoulder Width
+              </label>
+              <input
+                type="text"
+                {...register('shoulderWidth', {
+                  pattern: {
+                    value: /^\d+(\.\d+)?$/,
+                    message: 'Please enter a valid number',
+                  },
+                })}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-black dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Enter shoulder width (inches)"
+              />
+              {errors.shoulderWidth && (
+                <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                  {errors.shoulderWidth.message}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-black dark:text-white mb-1">
+                Chest
+              </label>
+              <input
+                type="text"
+                {...register('chest', {
+                  pattern: {
+                    value: /^\d+(\.\d+)?$/,
+                    message: 'Please enter a valid number',
+                  },
+                })}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-black dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Enter chest measurement (inches)"
+              />
+              {errors.chest && (
+                <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                  {errors.chest.message}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-black dark:text-white mb-1">
+                Hip
+              </label>
+              <input
+                type="text"
+                {...register('hip', {
+                  pattern: {
+                    value: /^\d+(\.\d+)?$/,
+                    message: 'Please enter a valid number',
+                  },
+                })}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-black dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Enter hip measurement (inches)"
+              />
+              {errors.hip && (
+                <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                  {errors.hip.message}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-black dark:text-white mb-1">
+                Bicep
+              </label>
+              <input
+                type="text"
+                {...register('bicep', {
+                  pattern: {
+                    value: /^\d+(\.\d+)?$/,
+                    message: 'Please enter a valid number',
+                  },
+                })}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-black dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Enter bicep measurement (inches)"
+              />
+              {errors.bicep && (
+                <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                  {errors.bicep.message}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-black dark:text-white mb-1">
+                Neck
+              </label>
+              <input
+                type="text"
+                {...register('neck', {
+                  pattern: {
+                    value: /^\d+(\.\d+)?$/,
+                    message: 'Please enter a valid number',
+                  },
+                })}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-black dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Enter neck measurement (inches)"
+              />
+              {errors.neck && (
+                <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                  {errors.neck.message}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-black dark:text-white mb-1">
+                Collar
+              </label>
+              <input
+                type="text"
+                {...register('collar', {
+                  pattern: {
+                    value: /^\d+(\.\d+)?$/,
+                    message: 'Please enter a valid number',
+                  },
+                })}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-black dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Enter collar measurement (inches)"
+              />
+              {errors.collar && (
+                <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                  {errors.collar.message}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-black dark:text-white mb-2">
+                Sleeve
+              </label>
+              <div className="flex gap-4">
+                <label className="flex items-center">
+                  <input
+                    type="radio"
+                    value="full"
+                    {...register('sleeve')}
+                    className="mr-2"
+                  />
+                  <span className="text-black dark:text-white">Full</span>
+                </label>
+                <label className="flex items-center">
+                  <input
+                    type="radio"
+                    value="half"
+                    {...register('sleeve')}
+                    className="mr-2"
+                  />
+                  <span className="text-black dark:text-white">Half</span>
+                </label>
+              </div>
             </div>
           </div>
-          </div>
-          {/* End of Two Column Grid */}
 
-          {/* Full Width Fields */}
           <div>
             <label className="block text-sm font-medium text-black dark:text-white mb-1">
               Measurement Notes
@@ -325,7 +320,7 @@ function MeasurementModal({ clothType, onClose, onSubmit }: MeasurementModalProp
             />
             {measurementImages.length > 0 && (
               <div className="mt-2">
-                <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2 mb-2">
                   <p className="text-sm text-gray-600 dark:text-gray-400">
                     {measurementImages.length} image(s) selected
                   </p>
@@ -418,7 +413,7 @@ function Step3Form({
 }: Step3FormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [viewingImage, setViewingImage] = useState<string | null>(null);
-  
+
   const {
     register,
     handleSubmit: handleFormSubmit,
@@ -437,7 +432,6 @@ function Step3Form({
 
   const stitchingType = watch('stitchingType');
 
-  // Auto-set measurements radio based on whether measurements exist
   useEffect(() => {
     if (measurements.length > 0) {
       setValue('measurementsGiven', 'Yes');
@@ -448,7 +442,7 @@ function Step3Form({
     setIsSubmitting(true);
     try {
       await onSubmit(data);
-    } catch (error) {
+    } catch {
       setIsSubmitting(false);
     }
   };
@@ -456,9 +450,15 @@ function Step3Form({
   return (
     <div>
       <h2 className="text-2xl font-semibold mb-4 text-black dark:text-white">
-        Order Details for {selectedCustomer?.name} - {selectedClothType?.name}
+        Order Details for{' '}
+        <span className="text-blue-600 dark:text-blue-400 font-bold bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 rounded">{selectedCustomer?.name}</span>
+        {' - '}
+        <span className="text-blue-600 dark:text-blue-400 font-bold bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 rounded">{selectedClothType?.name}</span>
       </h2>
-      <form onSubmit={handleFormSubmit(onFormSubmit)} className="space-y-6">
+      <form onSubmit={handleFormSubmit(onFormSubmit)} className="space-y-6" autoComplete="off">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Left column: form fields */}
+          <div className="space-y-6">
         <div>
           <label className="block text-sm font-medium text-black dark:text-white mb-2">
             Type *
@@ -497,7 +497,11 @@ function Step3Form({
 
         <div>
           <label className="block text-sm font-medium text-black dark:text-white mb-2">
-            Measurements * {measurements.length > 0 && <span className="text-green-600 dark:text-green-400 text-sm">({measurements.length} measurement set added)</span>}
+            Measurements * {measurements.length > 0 && (
+              <span className="text-green-600 dark:text-green-400 text-sm">
+                ({measurements.length} measurement set added)
+              </span>
+            )}
           </label>
           <div className="flex space-x-4">
             <label className="flex items-center">
@@ -591,68 +595,87 @@ function Step3Form({
             </p>
           )}
         </div>
-
-        <div>
-          <label className="block text-sm font-medium text-black dark:text-white mb-2">
-            Cloth Images
-          </label>
-          <div className="flex flex-col gap-2">
-            <input
-              type="file"
-              multiple
-              accept="image/*"
-              onChange={(e) => {
-                const files = Array.from(e.target.files || []);
-                setClothImages([...clothImages, ...files]);
-                e.target.value = '';
-              }}
-              className="w-full max-w-xs px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-black dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-            />
-            <p className="text-xs text-gray-500 dark:text-gray-400">
-              You can select multiple images at once or click the upload area multiple times to add more images.
-            </p>
           </div>
-          {clothImages.length > 0 && (
-            <div className="mt-4">
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  {clothImages.length} image(s) added
-                </p>
-                <button
-                  type="button"
-                  onClick={() => setClothImages([])}
-                  className="text-xs text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
-                >
-                  Clear All
-                </button>
-              </div>
-              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
-                {clothImages.map((file, index) => (
-                  <div key={`${file.name}-${index}`} className="relative group">
-                    <img
-                      src={URL.createObjectURL(file)}
-                      alt={`Cloth ${index + 1}`}
-                      className="w-full h-20 object-cover rounded border border-gray-300 dark:border-gray-600 cursor-pointer hover:opacity-80 transition-opacity"
-                      onClick={() => setViewingImage(URL.createObjectURL(file))}
-                    />
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setClothImages(clothImages.filter((_, i) => i !== index));
-                      }}
-                      className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm hover:bg-red-600 opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      ×
-                    </button>
-                    <p className="text-xs text-gray-600 dark:text-gray-400 mt-1 truncate">
-                      {file.name}
-                    </p>
-                  </div>
-                ))}
-              </div>
+
+          {/* Right column: cloth images */}
+          <div>
+            <label className="block text-sm font-medium text-black dark:text-white mb-2">
+              Cloth Images
+            </label>
+            <div className="flex flex-col gap-2">
+              <input
+                type="file"
+                multiple
+                accept="image/*"
+                onChange={(e) => {
+                  const files = Array.from(e.target.files || []);
+                  setClothImages([...clothImages, ...files]);
+                  e.target.value = '';
+                }}
+                className="w-full max-w-xs px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-black dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+              />
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                You can select multiple images at once or click the upload area multiple times to add more images.
+              </p>
             </div>
-          )}
+            {clothImages.length > 0 && (
+              <div className="mt-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    {clothImages.length} image(s) added
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setClothImages([])}
+                    className="text-xs text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
+                  >
+                    Clear All
+                  </button>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                  {clothImages.map((file, index) => (
+                    <div key={`${file.name}-${index}`} className="relative group">
+                      <img
+                        src={URL.createObjectURL(file)}
+                        alt={`Cloth ${index + 1}`}
+                        className="w-full h-20 object-cover rounded border border-gray-300 dark:border-gray-600 cursor-pointer hover:opacity-80 transition-opacity"
+                        onClick={() => setViewingImage(URL.createObjectURL(file))}
+                      />
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setClothImages(clothImages.filter((_, i) => i !== index));
+                        }}
+                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm hover:bg-red-600 opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        ×
+                      </button>
+                      <p className="text-xs text-gray-600 dark:text-gray-400 mt-1 truncate">
+                        {file.name}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            <div className="flex space-x-4 mt-6">
+              <button
+                type="button"
+                onClick={onBack}
+                className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
+              >
+                Back
+              </button>
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+              >
+                {isSubmitting ? 'Submitting...' : 'Submit Order'}
+              </button>
+            </div>
+          </div>
         </div>
 
         {viewingImage && (
@@ -661,29 +684,12 @@ function Step3Form({
             onClose={() => setViewingImage(null)}
           />
         )}
-
-        <div className="flex space-x-4">
-          <button
-            type="button"
-            onClick={onBack}
-            className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
-          >
-            Back
-          </button>
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
-          >
-            {isSubmitting ? 'Submitting...' : 'Submit Order'}
-          </button>
-        </div>
       </form>
     </div>
   );
 }
 
-export default function NewStitchingPage() {
+export default function NewStitchingClient() {
   const router = useRouter();
   const { resetKey } = useNewStitching();
   const [step, setStep] = useState<1 | 2 | 3>(1);
@@ -705,7 +711,6 @@ export default function NewStitchingPage() {
   const clothTypesPerPage = 12;
 
   useEffect(() => {
-    // Reset to step 1 and clear all data when resetKey changes
     setStep(1);
     setSelectedCustomer(null);
     setSelectedClothType(null);
@@ -788,12 +793,10 @@ export default function NewStitchingPage() {
   };
 
   useEffect(() => {
-    // Reset to first page when search term changes
     setCurrentPage(1);
   }, [searchTerm]);
 
   useEffect(() => {
-    // Reset cloth type page when cloth type search changes
     setClothTypeCurrentPage(1);
   }, [clothTypeSearchTerm]);
 
@@ -802,13 +805,11 @@ export default function NewStitchingPage() {
     customer.mobile.includes(searchTerm)
   );
 
-  // Pagination logic for customers
   const totalPages = Math.ceil(filteredCustomers.length / customersPerPage);
   const startIndex = (currentPage - 1) * customersPerPage;
   const endIndex = startIndex + customersPerPage;
   const paginatedCustomers = filteredCustomers.slice(startIndex, endIndex);
 
-  // Cloth type filtering and pagination
   const filteredClothTypes = clothTypes.filter((type: ClothType) =>
     type.name.toLowerCase().includes(clothTypeSearchTerm.toLowerCase())
   );
@@ -825,7 +826,6 @@ export default function NewStitchingPage() {
         return;
       }
 
-      // Upload images to Cloudinary
       let measurementImageUrls: string[] = [];
       let clothImageUrls: string[] = [];
 
@@ -864,8 +864,6 @@ export default function NewStitchingPage() {
         clothImages: clothImageUrls.length > 0 ? JSON.stringify(clothImageUrls) : null,
       };
 
-      console.log('Submitting order:', orderData);
-
       const response = await fetch('/api/orders', {
         method: 'POST',
         headers: {
@@ -899,38 +897,39 @@ export default function NewStitchingPage() {
           <div className="transition-opacity duration-300 ease-in-out">
             <h2 className="text-2xl font-semibold mb-4 text-black dark:text-white">Select Customer</h2>
 
-            {/* Search Input */}
-            <div className="mb-6">
-              <div className="relative max-w-md">
-                <input
-                  type="text"
-                  placeholder="Search customers..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full px-4 py-2 pl-10 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-black dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
-                </div>
-                {searchTerm && (
-                  <button
-                    onClick={() => setSearchTerm('')}
-                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
-                  >
-                    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            {customers.length > 0 && (
+              <div className="mb-6">
+                <div className="relative max-w-md">
+                  <input
+                    type="text"
+                    placeholder="Search customers..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full px-4 py-2 pl-10 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-black dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                     </svg>
-                  </button>
-                )}
+                  </div>
+                  {searchTerm && (
+                    <button
+                      onClick={() => setSearchTerm('')}
+                      className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                    >
+                      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  )}
+                </div>
               </div>
-            </div>
+            )}
 
             {loading ? (
               <p className="text-center text-gray-500">Loading customers...</p>
             ) : customers.length === 0 ? (
-              <p className="text-center text-gray-500">No customers found. <a href="/add-customer" className="text-blue-500 hover:underline">Add a customer first</a>.</p>
+              <p className="text-left text-gray-500">No customers found. <a href="/add-customer" className="text-blue-500 hover:underline">Add a customer first</a>.</p>
             ) : filteredCustomers.length === 0 ? (
               <p className="text-center text-gray-500">No customers match your search. <button onClick={() => setSearchTerm('')} className="text-blue-500 hover:underline">Clear search</button></p>
             ) : (
@@ -966,7 +965,6 @@ export default function NewStitchingPage() {
                   ))}
                 </div>
 
-                {/* Pagination Controls */}
                 {totalPages > 1 && (
                   <div className="mt-6 flex items-center justify-between">
                     <div className="text-sm text-gray-700 dark:text-gray-300">
@@ -981,7 +979,6 @@ export default function NewStitchingPage() {
                         Previous
                       </button>
 
-                      {/* Page Numbers */}
                       <div className="flex space-x-1">
                         {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
                           const pageNum = i + 1;
@@ -1013,25 +1010,27 @@ export default function NewStitchingPage() {
                 )}
               </>
             )}
-            
-            {/* Navigation Buttons */}
-            <div className="mt-6">
-              <button
-                onClick={() => setStep(2)}
-                disabled={!selectedCustomer}
-                className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
-              >
-                Next
-              </button>
-            </div>
+
+            {customers.length > 0 && (
+              <div className="mt-6">
+                <button
+                  onClick={() => setStep(2)}
+                  disabled={!selectedCustomer}
+                  className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+                >
+                  Next
+                </button>
+              </div>
+            )}
           </div>
         )}
 
         {step === 2 && selectedCustomer && (
           <div className="transition-opacity duration-300 ease-in-out animate-fade-in">
-            <h2 className="text-2xl font-semibold mb-4 text-black dark:text-white">Select Cloth Type for {selectedCustomer.name}</h2>
+            <h2 className="text-2xl font-semibold mb-4 text-black dark:text-white">
+              Select Cloth Type for <span className="text-blue-600 dark:text-blue-400 font-bold bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 rounded">{selectedCustomer.name}</span>
+            </h2>
 
-            {/* Cloth Type Search Input */}
             <div className="mb-6">
               <div className="relative max-w-md">
                 <input
@@ -1059,7 +1058,9 @@ export default function NewStitchingPage() {
               </div>
             </div>
 
-            {filteredClothTypes.length === 0 ? (
+            {clothTypesLoading ? (
+              <p className="text-center text-gray-500">Loading cloth types...</p>
+            ) : filteredClothTypes.length === 0 ? (
               <p className="text-center text-gray-500">No cloth types match your search. <button onClick={() => setClothTypeSearchTerm('')} className="text-blue-500 hover:underline">Clear search</button></p>
             ) : (
               <>
@@ -1087,7 +1088,6 @@ export default function NewStitchingPage() {
                   ))}
                 </div>
 
-                {/* Cloth Type Pagination Controls */}
                 {clothTypeTotalPages > 1 && (
                   <div className="mt-6 flex items-center justify-between">
                     <div className="text-sm text-gray-700 dark:text-gray-300">
@@ -1102,7 +1102,6 @@ export default function NewStitchingPage() {
                         Previous
                       </button>
 
-                      {/* Page Numbers */}
                       <div className="flex space-x-1">
                         {Array.from({ length: Math.min(clothTypeTotalPages, 5) }, (_, i) => {
                           const pageNum = i + 1;
@@ -1135,7 +1134,6 @@ export default function NewStitchingPage() {
               </>
             )}
 
-            {/* Navigation Buttons */}
             <div className="mt-6 flex gap-4">
               <button
                 onClick={() => setStep(1)}
@@ -1154,9 +1152,21 @@ export default function NewStitchingPage() {
           </div>
         )}
 
-        {step === 3 && selectedCustomer && selectedClothType && <Step3Form onSubmit={handleSubmit} onBack={() => setStep(2)} clothImages={clothImages} setClothImages={setClothImages} measurements={measurements} isMeasurementModalOpen={isMeasurementModalOpen} setIsMeasurementModalOpen={setIsMeasurementModalOpen} selectedClothType={selectedClothType} handleAddMeasurement={handleAddMeasurement} selectedCustomer={selectedCustomer} />}
+        {step === 3 && selectedCustomer && selectedClothType && (
+          <Step3Form
+            onSubmit={handleSubmit}
+            onBack={() => setStep(2)}
+            clothImages={clothImages}
+            setClothImages={setClothImages}
+            measurements={measurements}
+            isMeasurementModalOpen={isMeasurementModalOpen}
+            setIsMeasurementModalOpen={setIsMeasurementModalOpen}
+            selectedClothType={selectedClothType}
+            handleAddMeasurement={handleAddMeasurement}
+            selectedCustomer={selectedCustomer}
+          />
+        )}
 
-        {/* Measurement Modal */}
         {isMeasurementModalOpen && selectedClothType && (
           <MeasurementModal
             clothType={selectedClothType}
@@ -1168,3 +1178,4 @@ export default function NewStitchingPage() {
     </div>
   );
 }
+

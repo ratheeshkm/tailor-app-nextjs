@@ -8,7 +8,7 @@ type CustomerFormData = {
   mobile: string;
 };
 
-export default function AddCustomerPage() {
+export default function AddCustomerClient() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState('');
 
@@ -48,11 +48,11 @@ export default function AddCustomerPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-black py-8">
+    <div className="min-h-full bg-background py-8">
       <div className="max-w-md mx-auto px-4">
         <h1 className="text-3xl font-bold text-center mb-8 text-black dark:text-white">Add Customer</h1>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
+        <form onSubmit={handleSubmit(onSubmit)} className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md" autoComplete="off">
           <div className="mb-4">
             <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Name
@@ -123,3 +123,4 @@ export default function AddCustomerPage() {
     </div>
   );
 }
+

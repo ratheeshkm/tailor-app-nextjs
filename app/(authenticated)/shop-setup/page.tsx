@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
+import { useShop } from '../../contexts/ShopContext';
 
 interface ShopFormInputs {
   shopName: string;
@@ -13,38 +14,32 @@ interface ShopFormInputs {
 export default function ShopSetupPage() {
   const [isChecking, setIsChecking] = useState(true);
   const router = useRouter();
+  const { setShopName } = useShop();
   const { register, handleSubmit, formState: { errors, isSubmitting }, setError } = useForm<ShopFormInputs>({
     mode: 'onBlur',
   });
 
   useEffect(() => {
-    // Check if user is logged out or already has shop setup
-    const checkAuth = async () => {
+    // If user already has shop setup, redirect to dashboard (route is protected; user is logged in)
+    const checkShop = async () => {
       try {
         const response = await fetch('/api/shop', {
           method: 'GET',
           credentials: 'include',
         });
-        
+
         if (response.ok) {
-          // User already has shop setup, redirect to dashboard
           router.push('/dashboard');
           return;
         }
-        
-        if (response.status === 401) {
-          // User is not authenticated, redirect to login
-          router.push('/login');
-          return;
-        }
       } catch (error) {
-        console.error('Auth check error:', error);
+        console.error('Shop check error:', error);
       } finally {
         setIsChecking(false);
       }
     };
 
-    checkAuth();
+    checkShop();
   }, [router]);
 
   const onSubmit = async (data: ShopFormInputs) => {
@@ -62,7 +57,7 @@ export default function ShopSetupPage() {
         return;
       }
 
-      // Shop setup successful - redirect to dashboard
+      setShopName(data.shopName);
       router.push('/dashboard');
     } catch (err) {
       setError('root', { message: 'An error occurred. Please try again.' });
@@ -90,7 +85,7 @@ export default function ShopSetupPage() {
           </p>
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" autoComplete="off">
           {errors.root && (
             <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg text-sm">
               {errors.root.message}

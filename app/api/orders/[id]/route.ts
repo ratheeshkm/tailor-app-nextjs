@@ -71,7 +71,7 @@ export async function PUT(
     const updateData: Record<string, unknown> = {};
 
     if (data.clothType !== undefined) {
-      updateData.clothType = data.clothType;
+      updateData.clothType = typeof data.clothType === 'string' ? data.clothType : String(data.clothType);
     }
     if (data.stitchingType !== undefined) {
       updateData.stitchingType = data.stitchingType;
@@ -80,10 +80,12 @@ export async function PUT(
       updateData.measurementsGiven = data.measurementsGiven;
     }
     if (data.numberOfItems !== undefined) {
-      updateData.numberOfItems = parseInt(data.numberOfItems);
+      const num = parseInt(String(data.numberOfItems), 10);
+      if (!isNaN(num) && num >= 1) updateData.numberOfItems = num;
     }
     if (data.charge !== undefined) {
-      updateData.charge = parseFloat(data.charge);
+      const charge = parseFloat(String(data.charge));
+      if (!isNaN(charge) && charge >= 0) updateData.charge = charge;
     }
     if (data.deliveryDate !== undefined) {
       updateData.deliveryDate = data.deliveryDate;
@@ -124,21 +126,61 @@ export async function PUT(
     if (data.clothImages !== undefined) {
       updateData.clothImages = data.clothImages;
     }
+    const statusValue =
+      data.status !== undefined
+        ? (['pending', 'completed', 'delivered'].includes(String(data.status).toLowerCase())
+            ? String(data.status).toLowerCase()
+            : undefined)
+        : undefined;
+    if (statusValue !== undefined) {
+      updateData.status = statusValue;
+    }
 
-    // Update order
-    const order = await prisma.order.update({
-      where: { id: orderId },
-      data: updateData,
-      include: {
-        customer: true,
-      },
-    });
+    let order;
+    try {
+      order = await prisma.order.update({
+        where: { id: orderId },
+        data: updateData,
+        include: {
+          customer: true,
+        },
+      });
+    } catch (updateError) {
+      const errMsg = updateError instanceof Error ? updateError.message : String(updateError);
+      const isStatusColumnError =
+        updateData.status !== undefined &&
+        (errMsg.includes('status') || errMsg.includes('column') || errMsg.includes('does not exist') || errMsg.includes('Unknown arg'));
+      if (isStatusColumnError) {
+        delete updateData.status;
+        order = await prisma.order.update({
+          where: { id: orderId },
+          data: updateData,
+          include: {
+            customer: true,
+          },
+        });
+      } else {
+        throw updateError;
+      }
+    }
 
     return NextResponse.json(order);
   } catch (error) {
     console.error('Error updating order:', error);
+    const errMsg = error instanceof Error ? error.message : 'Unknown error';
+    const isSchemaError =
+      errMsg.includes('status') ||
+      errMsg.includes('column') ||
+      errMsg.includes('does not exist') ||
+      errMsg.includes('Unknown arg');
     return NextResponse.json(
-      { error: 'Failed to update order', details: error instanceof Error ? error.message : 'Unknown error' },
+      {
+        error: 'Failed to update order',
+        details: errMsg,
+        hint: isSchemaError
+          ? 'Run "npx prisma migrate deploy" to add the status column, then "npx prisma generate".'
+          : undefined,
+      },
       { status: 500 }
     );
   }

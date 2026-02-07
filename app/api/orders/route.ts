@@ -111,7 +111,7 @@ export async function POST(request: NextRequest) {
       const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
       const decoded = jwt.verify(token, JWT_SECRET) as { id: number };
 
-      // Create order
+      // Create order (status defaults to "pending" in schema)
       const order = await prisma.order.create({
         data: {
           userId: decoded.id,
@@ -122,6 +122,7 @@ export async function POST(request: NextRequest) {
           numberOfItems,
           charge,
           deliveryDate,
+          status: 'pending',
           waist,
           length,
           shoulderWidth,

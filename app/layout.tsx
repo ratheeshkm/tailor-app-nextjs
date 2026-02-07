@@ -2,7 +2,6 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import LayoutWrapper from "./components/LayoutWrapper";
-import { NewStitchingProvider } from "./contexts/NewStitchingContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -27,9 +26,9 @@ export const metadata: Metadata = {
     telephone: false,
   },
   icons: {
-    icon: "/icon-192.png",
-    shortcut: "/icon-192.png",
-    apple: "/icon-192.png",
+    icon: "/stitching-favicon.svg",
+    shortcut: "/stitching-favicon.svg",
+    apple: "/stitching-favicon.svg",
   },
   other: {
     "mobile-web-app-capable": "yes",
@@ -53,7 +52,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <script
+        {/* <script
           dangerouslySetInnerHTML={{
             __html: `
               if ('serviceWorker' in navigator) {
@@ -65,16 +64,14 @@ export default function RootLayout({
               }
             `,
           }}
-        />
+        /> */}
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <NewStitchingProvider>
-          <LayoutWrapper>
-            {children}
-          </LayoutWrapper>
-        </NewStitchingProvider>
+        <LayoutWrapper>
+          {children}
+        </LayoutWrapper>
       </body>
     </html>
   );

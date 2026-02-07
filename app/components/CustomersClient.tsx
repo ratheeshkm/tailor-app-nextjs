@@ -12,7 +12,7 @@ type Customer = {
 
 const ITEMS_PER_PAGE = 10;
 
-export default function CustomersPage() {
+export default function CustomersClient() {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
@@ -42,19 +42,16 @@ export default function CustomersPage() {
     }
   };
 
-  // Filter customers based on search term
   const filteredCustomers = customers.filter(customer =>
     customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     customer.mobile.includes(searchTerm)
   );
 
-  // Pagination logic
   const totalPages = Math.ceil(filteredCustomers.length / ITEMS_PER_PAGE);
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
   const endIndex = startIndex + ITEMS_PER_PAGE;
   const paginatedCustomers = filteredCustomers.slice(startIndex, endIndex);
 
-  // Reset to page 1 when search term changes
   useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm]);
@@ -78,7 +75,6 @@ export default function CustomersPage() {
           </div>
         )}
 
-        {/* Search Bar */}
         <div className="mb-6">
           <input
             type="text"
@@ -101,7 +97,6 @@ export default function CustomersPage() {
           </div>
         ) : (
           <>
-            {/* Customers Table */}
             <div className="bg-white dark:bg-gray-800 shadow rounded-lg overflow-hidden">
               <table className="min-w-full divide-y divide-gray-300 dark:divide-gray-700">
                 <thead className="bg-gray-100 dark:bg-gray-700">
@@ -124,7 +119,7 @@ export default function CustomersPage() {
                         {customer.name}
                       </td>
                       <td className="px-6 py-4 text-sm">
-                        <a 
+                        <a
                           href={`tel:${customer.mobile}`}
                           className="text-blue-600 dark:text-blue-400 hover:underline"
                         >
@@ -145,7 +140,6 @@ export default function CustomersPage() {
               </table>
             </div>
 
-            {/* Pagination */}
             {totalPages > 1 && (
               <div className="mt-6 flex justify-center items-center gap-2">
                 <button
@@ -178,7 +172,6 @@ export default function CustomersPage() {
               </div>
             )}
 
-            {/* Results Info */}
             <div className="mt-4 text-center text-sm text-gray-600 dark:text-gray-400">
               Showing {startIndex + 1} to {Math.min(endIndex, filteredCustomers.length)} of {filteredCustomers.length} customers
             </div>
@@ -188,3 +181,4 @@ export default function CustomersPage() {
     </div>
   );
 }
+
